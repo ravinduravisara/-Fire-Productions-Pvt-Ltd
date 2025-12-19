@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Phone, Sparkles, PlayCircle } from "lucide-react";
 import heroBg from "../../assets/hero-bg.png";
 import Button from "../ui/Button";
 
 export default function Hero() {
+  const navigate = useNavigate();
   const shouldReduceMotion = useReducedMotion();
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -36,7 +38,7 @@ export default function Hero() {
     [shouldReduceMotion]
   );
 
-  const go = (path) => window.location.assign(path);
+  const go = (path) => navigate(path);
 
   return (
     <section className="relative overflow-hidden py-20 sm:py-28">
@@ -137,7 +139,7 @@ export default function Hero() {
 
             <button
               type="button"
-              onClick={() => go("/portfolio")}
+              onClick={() => go("/services")}
               className="group inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-muted transition hover:text-text"
             >
               <PlayCircle className="h-5 w-5 text-secondary" />
