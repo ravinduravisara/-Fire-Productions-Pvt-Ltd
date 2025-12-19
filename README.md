@@ -30,12 +30,6 @@ PORT=5000
 
 If `MONGO_URI` is not set, the API starts without DB connection (read/write operations will fail), which is fine for frontend scaffolding.
 
-## Database Migration (MySQL → MongoDB)
-- Backend now uses MongoDB via Mongoose. Set `MONGO_URI` in `server/.env`.
-- Start a local MongoDB (`mongodb://127.0.0.1:27017/fire_production`) or use MongoDB Atlas.
-- Existing MySQL-related env vars are no longer used; they are commented in `server/.env` for reference.
-- Data migration (optional): export your MySQL tables (`products`, `works`, `contact_messages`) to JSON and import into MongoDB collections using `mongoimport`. Ensure documents include fields: `title`, `description`, `imageUrl`, `price` (products); `title`, `description`, `imageUrl`, `link`, `category`, `tags` (works); `name`, `email`, `message` (contacts). The API returns `id` (string) for documents via a JSON transform.
-
 ## Scripts
 - Root `dev`: runs client (Vite) and server (nodemon) concurrently.
 - Client `dev`: Vite dev server at http://localhost:5173
