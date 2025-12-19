@@ -53,6 +53,8 @@ export const updateWork = asyncHandler(async (req, res) => {
   const Work = getWorkModel()
   const id = req.params.id
   const body = { ...req.body }
+  const prev = await Work.findById(id)
+  if (!prev) return res.status(404).json({ message: 'Not found' })
   if (!body.imageUrl) {
     if (typeof body.image === 'string') body.imageUrl = body.image
     if (typeof body.url === 'string' && body.url.startsWith('/uploads/')) body.imageUrl = body.url
@@ -67,6 +69,11 @@ export const updateWork = asyncHandler(async (req, res) => {
   }
   const item = await Work.findByIdAndUpdate(id, payload, { new: true })
   if (!item) return res.status(404).json({ message: 'Not found' })
+  try {
+    if (prev.imageUrl && body.imageUrl && String(prev.imageUrl) !== String(body.imageUrl)) {
+      await deleteAssetByUrl(prev.imageUrl)
+    }
+  } catch {}
   res.json(item)
 })
 
@@ -78,6 +85,11 @@ export const deleteWork = asyncHandler(async (req, res) => {
   const id = req.params.id
   const item = await Work.findByIdAndDelete(id)
   if (!item) return res.status(404).json({ message: 'Not found' })
-  try { await deleteAssetByUrl(item.imageUrl) } catch {}
+  try {
+    const candidates = [item.imageUrl, item.image, item.url].filter((u) => typeof u === 'string' && u.trim())
+    for (const u of candidates) {
+      try { await deleteAssetByUrl(u) } catch {}
+    }
+  } catch {}
   res.status(204).end()
 })

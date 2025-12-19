@@ -70,6 +70,9 @@ export const updateProduct = asyncHandler(async (req, res) => {
   const Product = getProductModel()
   const id = req.params.id
   const body = { ...req.body }
+  // Load existing to compare image changes
+  const prev = await Product.findById(id)
+  if (!prev) return res.status(404).json({ message: 'Not found' })
   if (!body.imageUrl) {
     if (typeof body.image === 'string') body.imageUrl = body.image
     if (typeof body.url === 'string' && body.url.startsWith('/uploads/')) body.imageUrl = body.url
@@ -84,6 +87,12 @@ export const updateProduct = asyncHandler(async (req, res) => {
   }
   const item = await Product.findByIdAndUpdate(id, payload, { new: true })
   if (!item) return res.status(404).json({ message: 'Not found' })
+  // If image changed, best-effort delete previous asset
+  try {
+    if (prev.imageUrl && body.imageUrl && String(prev.imageUrl) !== String(body.imageUrl)) {
+      await deleteAssetByUrl(prev.imageUrl)
+    }
+  } catch {}
   res.json(item)
 })
 
@@ -96,6 +105,11 @@ export const deleteProduct = asyncHandler(async (req, res) => {
   const item = await Product.findByIdAndDelete(id)
   if (!item) return res.status(404).json({ message: 'Not found' })
   // Best-effort: delete linked image asset
-  try { await deleteAssetByUrl(item.imageUrl) } catch {}
+  try {
+    const candidates = [item.imageUrl, item.image, item.url].filter((u) => typeof u === 'string' && u.trim())
+    for (const u of candidates) {
+      try { await deleteAssetByUrl(u) } catch {}
+    }
+  } catch {}
   res.status(204).end()
 })

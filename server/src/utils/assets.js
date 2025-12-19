@@ -5,7 +5,7 @@ import { getImageAssetModel } from '../models/ImageAsset.js'
 
 export function extractAssetIdFromUrl(url) {
   if (typeof url !== 'string') return null
-  const m = url.match(/\/api\/assets\/([a-f0-9]{24})(?:$|[/?#])/i)
+  const m = url.match(/\/api\/assets\/([a-fA-F0-9]{24})(?:$|[/?#])/)
   return m ? m[1] : null
 }
 

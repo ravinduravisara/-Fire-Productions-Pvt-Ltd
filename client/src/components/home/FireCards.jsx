@@ -17,7 +17,8 @@ export default function FireCards({ items = [] }) {
           {(() => {
             const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
             const filesBase = apiBase.replace(/\/api$/, '')
-            const imageSrc = w.imageUrl ? (String(w.imageUrl).startsWith('http') ? w.imageUrl : `${filesBase}${w.imageUrl}`) : ''
+            const raw = w.imageUrl || w.image || w.url || ''
+            const imageSrc = raw ? (String(raw).startsWith('http') ? raw : `${filesBase}${raw}`) : ''
             return (
               <div className="aspect-video bg-surface" style={{ backgroundImage: `url(${imageSrc})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
             )

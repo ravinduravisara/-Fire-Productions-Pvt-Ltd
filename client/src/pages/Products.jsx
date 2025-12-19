@@ -28,10 +28,11 @@ function formatLKR(value) {
 function getImageSrc(item) {
   const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
   const filesBase = apiBase.replace(/\/api$/, "");
-  const imageSrc = item.imageUrl
-    ? item.imageUrl.startsWith("http")
-      ? item.imageUrl
-      : `${filesBase}${item.imageUrl}`
+  const raw = item.imageUrl || item.image || item.url || "";
+  const imageSrc = raw
+    ? String(raw).startsWith("http")
+      ? raw
+      : `${filesBase}${raw}`
     : "";
   return imageSrc;
 }
