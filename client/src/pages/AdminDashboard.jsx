@@ -1168,7 +1168,7 @@ function AddService({ token }) {
           />
         </Field>
 
-        <Field label="Image (optional)" icon={Upload}>
+        <Field label="Image (optional)">
           <input
             type="file"
             accept="image/*"
