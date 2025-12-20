@@ -838,7 +838,7 @@ function AddProduct({ token }) {
           />
         </Field>
 
-        <Field label="Image" icon={Upload}>
+        <Field label="Image">
           <input
             type="file"
             accept="image/*"
@@ -1033,7 +1033,7 @@ function AddWork({ token }) {
           />
         </Field>
 
-        <Field label="Cover Image" icon={Upload}>
+        <Field label="Cover Image">
           <input
             type="file"
             accept="image/*"
