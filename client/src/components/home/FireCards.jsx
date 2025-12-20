@@ -25,6 +25,9 @@ export default function FireCards({ items = [] }) {
           })()}
           <div className="p-4">
             <h3 className="font-medium group-hover:text-brand-600 text-text">{w.title}</h3>
+            {w.description ? (
+              <p className="mt-1 text-sm text-muted">{w.description}</p>
+            ) : null}
             {w.tags?.length ? (
               <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted">
                 {w.tags.map((t) => (<span key={t} className="px-2 py-0.5 rounded-full bg-background/60 border border-border/40">{t}</span>))}

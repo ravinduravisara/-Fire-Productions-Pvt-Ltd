@@ -924,6 +924,7 @@ function AddProduct({ token }) {
 function AddWork({ token }) {
   const [form, setForm] = useState({
     title: "",
+    description: "",
     imageUrl: "",
     link: "",
     tags: "",
@@ -1006,7 +1007,7 @@ function AddWork({ token }) {
 
       await createWork(payload, token);
       setStatus("success");
-      setForm({ title: "", imageUrl: "", link: "", tags: "", category: "Acoustic" });
+      setForm({ title: "", description: "", imageUrl: "", link: "", tags: "", category: "Acoustic" });
     } catch (e) {
       setStatus("error");
       const msg = e?.response?.data?.message || "Failed to save project.";
@@ -1014,7 +1015,7 @@ function AddWork({ token }) {
     }
   };
 
-  const resetForm = () => setForm({ title: "", imageUrl: "", link: "", tags: "", category: "Acoustic" });
+  const resetForm = () => setForm({ title: "", description: "", imageUrl: "", link: "", tags: "", category: "Acoustic" });
   const actions = [
     { label: "Reset", icon: RotateCcw, onClick: resetForm },
   ];
@@ -1068,6 +1069,17 @@ function AddWork({ token }) {
             onChange={onChange}
             placeholder="https://…"
             className={inputWithIcon}
+          />
+        </Field>
+
+        <Field label="Description" icon={Tags}>
+          <textarea
+            name="description"
+            value={form.description}
+            onChange={onChange}
+            placeholder="Short description about the project"
+            rows={3}
+            className={cx(inputWithIcon, "resize-none")}
           />
         </Field>
 
