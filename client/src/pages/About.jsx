@@ -107,7 +107,7 @@ export default function About() {
   };
 
   return (
-    <section className="relative overflow-hidden py-16 sm:py-20">
+    <section className="relative overflow-hidden py-10 sm:py-16 lg:py-20">
       {/* Background glow */}
       <div
         className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-brand-600/10 via-transparent to-transparent"
@@ -122,8 +122,7 @@ export default function About() {
         <motion.div
           variants={wrap}
           initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.25 }}
+          animate="show"   // ✅ FIX: always show on load (no scroll needed)
           className="mx-auto max-w-5xl"
         >
           {/* Header */}
@@ -165,8 +164,7 @@ export default function About() {
                   <div>
                     <div className="text-sm font-semibold text-text">What we stand for</div>
                     <p className="mt-1 text-sm leading-relaxed text-muted">
-                      Craft, clarity, and impact — every frame and every note is designed to move
-                      people.
+                      Craft, clarity, and impact — every frame and every note is designed to move people.
                     </p>
                   </div>
                 </div>
@@ -190,7 +188,7 @@ export default function About() {
             </motion.div>
           </motion.div>
 
-          {/* ✅ Leadership (fully responsive, clear text on all devices) */}
+          {/* Leadership (responsive) */}
           <motion.div variants={item} className="mt-10">
             <div className="mb-5 flex items-end justify-between gap-4">
               <div>
@@ -210,14 +208,7 @@ export default function About() {
                   key={p.role}
                   className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/30 backdrop-blur-xl transition hover:-translate-y-1 hover:border-brand-600/25 hover:bg-card/45 hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/40"
                 >
-                  <span
-                    className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-600/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                    aria-hidden="true"
-                  />
-
-                  {/* ✅ Responsive layout: stack on mobile, side-by-side on md+ */}
                   <div className="grid gap-4 p-5 md:grid-cols-[220px,1fr] md:items-start">
-                    {/* Image (responsive sizes) */}
                     <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-background/25">
                       <div className="aspect-[4/3] w-full md:aspect-[3/4]">
                         <img
@@ -227,29 +218,14 @@ export default function About() {
                           loading="lazy"
                         />
                       </div>
-                      <div
-                        className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/5"
-                        aria-hidden="true"
-                      />
                     </div>
 
-                    {/* Text (no truncation, readable sizes) */}
                     <div className="min-w-0">
-                      <h3 className="text-base font-semibold text-text sm:text-lg">
-                        {p.name}
-                      </h3>
+                      <h3 className="text-base font-semibold text-text sm:text-lg">{p.name}</h3>
                       <p className="mt-1 text-sm text-muted">{p.role}</p>
-
-                      <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-                        {p.bio}
-                      </p>
+                      <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">{p.bio}</p>
                     </div>
                   </div>
-
-                  <div
-                    className="pointer-events-none absolute -bottom-20 -right-20 h-48 w-48 rounded-full bg-brand-600/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-                    aria-hidden="true"
-                  />
                 </div>
               ))}
             </div>
@@ -269,17 +245,12 @@ export default function About() {
                   </div>
                   <h3 className="mt-4 text-sm font-semibold text-text">{h.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted">{h.desc}</p>
-
-                  <span
-                    className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-600/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                    aria-hidden="true"
-                  />
                 </div>
               );
             })}
           </motion.div>
 
-          {/* ✅ SOCIAL BAR BELOW HIGHLIGHTS (responsive) */}
+          {/* Social bar */}
           <motion.div
             variants={item}
             className="mt-6 rounded-2xl border border-border/60 bg-card/25 p-5 backdrop-blur-xl"
