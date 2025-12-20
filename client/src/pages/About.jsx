@@ -4,24 +4,26 @@ import SectionTitle from "../components/ui/SectionTitle";
 
 const highlights = [
   {
-    icon: Film,
-    title: "Film Production",
-    desc: "Cinematic shooting, editing, and color grading built for modern audiences.",
-  },
-  {
     icon: Music2,
     title: "Music Production",
     desc: "Original tracks, mixing, and mastering that elevate your brand identity.",
   },
   {
-    icon: Mic2,
+   icon: Mic2,
     title: "Acoustic & Live Audio",
     desc: "Premium live capture and acoustic sound design with studio-level clarity.",
+
   },
   {
     icon: Sparkles,
     title: "Creative Direction",
     desc: "Story-first concepts, visuals, and campaigns designed to stand out.",
+  },
+  {
+    icon: Film,
+    title: "Film Production",
+    desc: "Cinematic shooting, editing, and color grading built for modern audiences.",
+
   },
 ];
 
@@ -73,9 +75,10 @@ export default function About() {
 
               <p className="mt-5 text-base leading-relaxed text-muted sm:text-lg">
                 Fire Productions is a multidisciplinary creative studio specializing in{" "}
-                <span className="text-text font-semibold">film</span>,{" "}
-                <span className="text-text font-semibold">music</span>, and{" "}
-                <span className="text-text font-semibold">acoustic production</span>. We craft story-led visuals and
+                <span className="text-text font-semibold">music</span>,{" "}
+                <span className="text-text font-semibold">acoustic</span>,{" "}
+                <span className="text-text font-semibold">entertainment</span>, and{" "}
+                <span className="text-text font-semibold">film production</span>. We craft story-led visuals and
                 studio-quality audio that strengthen brand identity and keep audiences engaged.
               </p>
 
@@ -150,9 +153,10 @@ export default function About() {
           {/* Bottom note */}
           <motion.div variants={item} className="mt-10 rounded-2xl border border-border/60 bg-card/25 p-6 backdrop-blur-xl">
             <p className="text-sm text-muted">
-              Want to collaborate? We’re available for <span className="text-text font-semibold">brand films</span>,{" "}
-              <span className="text-text font-semibold">music projects</span>, and{" "}
-              <span className="text-text font-semibold">live acoustic production</span>.
+              Want to collaborate? We’re available for <span className="text-text font-semibold">music projects</span>,{" "}
+              <span className="text-text font-semibold">live acoustic production</span>,
+              <span className="text-text font-semibold">entertainment</span>, and{" "}
+              <span className="text-text font-semibold">brand films</span>.
             </p>
           </motion.div>
         </motion.div>

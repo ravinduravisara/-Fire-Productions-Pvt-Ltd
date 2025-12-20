@@ -104,7 +104,7 @@ export default function Hero() {
             variants={variants.item}
             className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted sm:text-lg"
           >
-            Fire Production specializes in high-quality film, music, and acoustic production that strengthens
+            Fire Production specializes in music, acoustic production, entertainment and high-quality film that strengthens
             brand identity and audience impact.
           </motion.p>
 
