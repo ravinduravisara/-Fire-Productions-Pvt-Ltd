@@ -1,0 +1,47 @@
+version: '3.8'
+
+# Production overrides
+services:
+  mongodb:
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  server:
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    env_file:
+      - .env.production
+
+  client:
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # MongoDB Backup Service (runs daily at 2 AM)
+  mongo-backup:
+    image: mongo:7.0
+    container_name: fire-mongo-backup
+    restart: "no"
+    volumes:
+      - ./mongo-backup:/backup
+      - ./scripts:/scripts
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        echo "Running MongoDB backup..."
+        mongodump --host mongodb:27017 --db test --out /backup/backup_$$(date +%Y%m%d_%H%M%S)
+        echo "Cleaning old backups (keeping last 7 days)..."
+        find /backup -maxdepth 1 -type d -name "backup_*" -mtime +7 -exec rm -rf {} \;
+        echo "Backup complete!"
+    networks:
+      - fire-network
+    profiles:
+      - backup

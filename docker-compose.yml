@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: fire-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: test
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-backup:/backup
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - fire-network
+
+  # Node.js API Server
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: fire-server
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URI: mongodb://mongodb:27017/test
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    networks:
+      - fire-network
+
+  # React Client (Nginx)
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: fire-client
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - server
+    networks:
+      - fire-network
+
+networks:
+  fire-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:

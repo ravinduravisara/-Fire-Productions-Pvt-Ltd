@@ -35,3 +35,10 @@ Thumbs.db
 
 # Misc
 *.local
+
+# Docker
+docker-compose.override.yml
+.env.production
+
+# Backup data (included intentionally for initial restore)
+# mongo-backup/backup_*
