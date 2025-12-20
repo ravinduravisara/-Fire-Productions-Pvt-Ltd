@@ -99,7 +99,7 @@ export default function Navbar() {
             <span className="text-sm font-semibold tracking-tight text-text">
               Fire Production
             </span>
-            <span className="text-[11px] text-muted">Film • Music • Acoustic</span>
+            <span className="text-[11px] text-muted">Music • Acoustic • Entertainment • Film</span>
           </div>
         </Link>
 

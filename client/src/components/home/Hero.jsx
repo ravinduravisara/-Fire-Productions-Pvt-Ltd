@@ -76,7 +76,7 @@ export default function Hero() {
           <motion.div variants={variants.item} className="flex justify-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-surface/70 px-4 py-2 text-sm text-text shadow-sm backdrop-blur">
               <Sparkles className="h-4 w-4 text-secondary" />
-              <span className="font-medium">Film • Music • Acoustic Production</span>
+              <span className="font-medium">Music • Acoustic • Entertainment • Film Production</span>
               <span className="h-1 w-1 rounded-full bg-border/60" />
               <span className="text-muted">Premium creative studio</span>
             </div>
@@ -90,7 +90,7 @@ export default function Hero() {
             Igniting brands with{" "}
             <span className="relative inline-block">
               <span className="bg-gradient-to-r from-primary via-secondary to-highlight bg-clip-text text-transparent">
-                creative fire
+                Fire Productions
               </span>
               <span
                 className="pointer-events-none absolute -bottom-2 left-0 right-0 mx-auto h-[10px] w-[90%] rounded-full bg-gradient-to-r from-primary/30 via-secondary/30 to-highlight/20 blur-md"
