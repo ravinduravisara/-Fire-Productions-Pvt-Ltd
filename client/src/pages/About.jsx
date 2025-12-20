@@ -12,11 +12,9 @@ import {
 } from "lucide-react";
 import SectionTitle from "../components/ui/SectionTitle";
 
-// ✅ Use module asset import for founder image
+// ✅ Images from src/assets (Vite friendly)
 import founderImg from "../assets/founder.jpg";
-// If you add a co-founder image, place it in src/assets and import similarly
 import coFounderImg from "../assets/cofounder.jpg";
-
 
 const highlights = [
   {
@@ -50,7 +48,6 @@ function TikTokIcon(props) {
   );
 }
 
-// ✅ Leadership images now come from public/assets
 const LEADERSHIP = [
   {
     name: "Founder Name",
@@ -66,12 +63,12 @@ const LEADERSHIP = [
   },
 ];
 
-// ✅ Social links row that appears BELOW the Highlights cards
+// ✅ Social links row BELOW the highlights
 const SOCIAL_LINKS = {
-  facebook: "", // add your Facebook link
-  youtube: "", // add your YouTube link
-  tiktok: "", // add your TikTok link
-  instagram: "",// add your Instagram link
+  facebook: "",
+  youtube: "",
+  tiktok: "",
+  instagram: "https://www.instagram.com/ravinduraviya",
 };
 
 function SocialLink({ href, label, children }) {
@@ -193,7 +190,7 @@ export default function About() {
             </motion.div>
           </motion.div>
 
-          {/* Leadership */}
+          {/* ✅ Leadership (fully responsive, clear text on all devices) */}
           <motion.div variants={item} className="mt-10">
             <div className="mb-5 flex items-end justify-between gap-4">
               <div>
@@ -207,7 +204,7 @@ export default function About() {
               </span>
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid gap-5 lg:grid-cols-2">
               {LEADERSHIP.map((p) => (
                 <div
                   key={p.role}
@@ -217,21 +214,42 @@ export default function About() {
                     className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-600/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                     aria-hidden="true"
                   />
-                  <div className="flex gap-4 p-5">
-                    <div className="relative h-[300px] w-[300px] flex-none overflow-hidden rounded-2xl border border-border/60 bg-background/25">
-                      <img
-                        src={p.image}
-                        alt={p.name}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
+
+                  {/* ✅ Responsive layout: stack on mobile, side-by-side on md+ */}
+                  <div className="grid gap-4 p-5 md:grid-cols-[220px,1fr] md:items-start">
+                    {/* Image (responsive sizes) */}
+                    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-background/25">
+                      <div className="aspect-[4/3] w-full md:aspect-[3/4]">
+                        <img
+                          src={p.image}
+                          alt={p.name}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div
+                        className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/5"
+                        aria-hidden="true"
                       />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="truncate text-sm font-semibold text-text">{p.name}</h3>
-                      <p className="mt-0.5 text-xs text-muted">{p.role}</p>
-                      <p className="mt-3 text-sm leading-relaxed text-muted">{p.bio}</p>
+
+                    {/* Text (no truncation, readable sizes) */}
+                    <div className="min-w-0">
+                      <h3 className="text-base font-semibold text-text sm:text-lg">
+                        {p.name}
+                      </h3>
+                      <p className="mt-1 text-sm text-muted">{p.role}</p>
+
+                      <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
+                        {p.bio}
+                      </p>
                     </div>
                   </div>
+
+                  <div
+                    className="pointer-events-none absolute -bottom-20 -right-20 h-48 w-48 rounded-full bg-brand-600/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                    aria-hidden="true"
+                  />
                 </div>
               ))}
             </div>
@@ -251,17 +269,22 @@ export default function About() {
                   </div>
                   <h3 className="mt-4 text-sm font-semibold text-text">{h.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted">{h.desc}</p>
+
+                  <span
+                    className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-600/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    aria-hidden="true"
+                  />
                 </div>
               );
             })}
           </motion.div>
 
-          {/* ✅ SOCIAL BAR BELOW HIGHLIGHTS */}
+          {/* ✅ SOCIAL BAR BELOW HIGHLIGHTS (responsive) */}
           <motion.div
             variants={item}
             className="mt-6 rounded-2xl border border-border/60 bg-card/25 p-5 backdrop-blur-xl"
           >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="text-sm font-semibold text-text">Follow us</div>
                 <p className="mt-1 text-sm text-muted">
