@@ -65,10 +65,10 @@ const LEADERSHIP = [
 
 // ✅ Social links row BELOW the highlights
 const SOCIAL_LINKS = {
-  facebook: "",
-  youtube: "",
-  tiktok: "",
-  instagram: "https://www.instagram.com/ravinduraviya",
+  facebook: "https://www.facebook.com/profile.php?id=61585614113109",
+  youtube: "https://youtube.com/@firemusicproductionsl?si=B24zsbyhqts2XTYE",
+  tiktok: "https://www.tiktok.com/@fireproductionspvtltd?is_from_webapp=1&sender_device=pc",
+  instagram: "",
 };
 
 function SocialLink({ href, label, children }) {
@@ -134,19 +134,15 @@ export default function About() {
               />
 
               <p className="mt-5 text-base leading-relaxed text-muted sm:text-lg">
-                Fire Productions is a multidisciplinary creative studio specializing in{" "}
+               Founded in 2012, Fire Productions is a multidisciplinary creative studio working across{" "}
                 <span className="text-text font-semibold">music</span>,{" "}
                 <span className="text-text font-semibold">acoustic</span>,{" "}
                 <span className="text-text font-semibold">entertainment</span>, and{" "}
-                <span className="text-text font-semibold">film production</span>. We craft story-led
-                visuals and studio-quality audio that strengthen brand identity and keep audiences
-                engaged.
+                <span className="text-text font-semibold">film production</span>.For over a decade, we’ve delivered large-scale video projects and diverse musical productions, shaping stories through refined visuals and studio-quality sound. Every project is built on intention—crafted to feel immersive, powerful, and lasting.
               </p>
 
               <p className="mt-4 text-base leading-relaxed text-muted">
-                From concept to final delivery, we focus on clean execution, fast turnaround, and a
-                premium finish — whether you need a brand film, a music release, or live sound that
-                feels world-class.
+                From concept to final delivery, we move fast, work clean, and finish strong. Whether it’s a brand film, a music release, or live sound at scale, Fire Productions creates experiences that look cinematic and sound world-class.
               </p>
             </div>
 
