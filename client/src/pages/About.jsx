@@ -1,6 +1,22 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { Flame, Film, Music2, Mic2, Sparkles } from "lucide-react";
+import {
+  Flame,
+  Film,
+  Music2,
+  Mic2,
+  Sparkles,
+  Instagram,
+  Globe,
+  Facebook,
+  Youtube,
+} from "lucide-react";
 import SectionTitle from "../components/ui/SectionTitle";
+
+// ✅ Put your images here:
+// public/assets/founder.jpg
+// public/assets/cofounder.jpg
+const founderImg = "/assets/founder.jpg";
+const coFounderImg = "/assets/cofounder.jpg";
 
 const highlights = [
   {
@@ -9,10 +25,9 @@ const highlights = [
     desc: "Original tracks, mixing, and mastering that elevate your brand identity.",
   },
   {
-   icon: Mic2,
+    icon: Mic2,
     title: "Acoustic & Live Audio",
     desc: "Premium live capture and acoustic sound design with studio-level clarity.",
-
   },
   {
     icon: Sparkles,
@@ -23,9 +38,56 @@ const highlights = [
     icon: Film,
     title: "Film Production",
     desc: "Cinematic shooting, editing, and color grading built for modern audiences.",
-
   },
 ];
+
+// ✅ Simple TikTok icon (lucide-react doesn't include TikTok by default in many versions)
+function TikTokIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M16.6 3c.4 2.7 2 4.8 4.4 5.4v3.2c-1.9 0-3.6-.6-5-1.6v6.2c0 3.6-2.9 6.6-6.6 6.6S3 20.1 3 16.6s2.9-6.6 6.6-6.6c.4 0 .8 0 1.2.1v3.5c-.4-.2-.8-.3-1.2-.3-1.7 0-3.1 1.4-3.1 3.1s1.4 3.1 3.1 3.1 3.1-1.4 3.1-3.1V3h3.4z" />
+    </svg>
+  );
+}
+
+// ✅ Leadership images now come from public/assets
+const LEADERSHIP = [
+  {
+    name: "Founder Name",
+    role: "Founder • Fire Productions",
+    image: founderImg,
+    bio: "Leads creative direction across music and film — focused on story, craft, and studio-grade execution.",
+  },
+  {
+    name: "Co-Founder Name",
+    role: "Co-Founder • Fire Entertainment",
+    image: coFounderImg,
+    bio: "Builds entertainment concepts and production workflows — delivering premium visuals with fast turnaround.",
+  },
+];
+
+// ✅ Social links row that appears BELOW the Highlights cards
+const SOCIAL_LINKS = {
+  facebook: "", // add your Facebook link
+  youtube: "", // add your YouTube link
+  tiktok: "", // add your TikTok link
+  instagram: "",// add your Instagram link
+};
+
+function SocialLink({ href, label, children }) {
+  if (!href) return null;
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={label}
+      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border/60 bg-background/25 text-muted transition hover:-translate-y-0.5 hover:border-brand-600/25 hover:bg-card/40 hover:text-text"
+    >
+      {children}
+    </a>
+  );
+}
 
 export default function About() {
   const reduce = useReducedMotion();
@@ -34,7 +96,9 @@ export default function About() {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: reduce ? { duration: 0.01 } : { staggerChildren: 0.08, delayChildren: 0.06 },
+      transition: reduce
+        ? { duration: 0.01 }
+        : { staggerChildren: 0.08, delayChildren: 0.06 },
     },
   };
 
@@ -78,13 +142,15 @@ export default function About() {
                 <span className="text-text font-semibold">music</span>,{" "}
                 <span className="text-text font-semibold">acoustic</span>,{" "}
                 <span className="text-text font-semibold">entertainment</span>, and{" "}
-                <span className="text-text font-semibold">film production</span>. We craft story-led visuals and
-                studio-quality audio that strengthen brand identity and keep audiences engaged.
+                <span className="text-text font-semibold">film production</span>. We craft story-led
+                visuals and studio-quality audio that strengthen brand identity and keep audiences
+                engaged.
               </p>
 
               <p className="mt-4 text-base leading-relaxed text-muted">
-                From concept to final delivery, we focus on clean execution, fast turnaround, and a premium finish —
-                whether you need a brand film, a music release, or live sound that feels world-class.
+                From concept to final delivery, we focus on clean execution, fast turnaround, and a
+                premium finish — whether you need a brand film, a music release, or live sound that
+                feels world-class.
               </p>
             </div>
 
@@ -102,7 +168,8 @@ export default function About() {
                   <div>
                     <div className="text-sm font-semibold text-text">What we stand for</div>
                     <p className="mt-1 text-sm leading-relaxed text-muted">
-                      Craft, clarity, and impact — every frame and every note is designed to move people.
+                      Craft, clarity, and impact — every frame and every note is designed to move
+                      people.
                     </p>
                   </div>
                 </div>
@@ -126,6 +193,50 @@ export default function About() {
             </motion.div>
           </motion.div>
 
+          {/* Leadership */}
+          <motion.div variants={item} className="mt-10">
+            <div className="mb-5 flex items-end justify-between gap-4">
+              <div>
+                <div className="text-sm font-semibold text-text">Leadership</div>
+                <p className="mt-1 text-sm text-muted">
+                  The people behind Fire Productions & Fire Entertainment.
+                </p>
+              </div>
+              <span className="hidden sm:block text-xs text-muted">
+                Studio-first • Story-led • Fast turnaround
+              </span>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              {LEADERSHIP.map((p) => (
+                <div
+                  key={p.role}
+                  className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/30 backdrop-blur-xl transition hover:-translate-y-1 hover:border-brand-600/25 hover:bg-card/45 hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/40"
+                >
+                  <span
+                    className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-600/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    aria-hidden="true"
+                  />
+                  <div className="flex gap-4 p-5">
+                    <div className="relative h-16 w-16 flex-none overflow-hidden rounded-2xl border border-border/60 bg-background/25">
+                      <img
+                        src={p.image}
+                        alt={p.name}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate text-sm font-semibold text-text">{p.name}</h3>
+                      <p className="mt-0.5 text-xs text-muted">{p.role}</p>
+                      <p className="mt-3 text-sm leading-relaxed text-muted">{p.bio}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
           {/* Highlights */}
           <motion.div variants={item} className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {highlights.map((h) => {
@@ -140,21 +251,53 @@ export default function About() {
                   </div>
                   <h3 className="mt-4 text-sm font-semibold text-text">{h.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted">{h.desc}</p>
-
-                  <span
-                    className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-600/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                    aria-hidden="true"
-                  />
                 </div>
               );
             })}
           </motion.div>
 
+          {/* ✅ SOCIAL BAR BELOW HIGHLIGHTS */}
+          <motion.div
+            variants={item}
+            className="mt-6 rounded-2xl border border-border/60 bg-card/25 p-5 backdrop-blur-xl"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-sm font-semibold text-text">Follow us</div>
+                <p className="mt-1 text-sm text-muted">
+                  Stay connected on social media for new releases and updates.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <SocialLink href={SOCIAL_LINKS.facebook} label="Facebook">
+                  <Facebook className="h-5 w-5" />
+                </SocialLink>
+                <SocialLink href={SOCIAL_LINKS.youtube} label="YouTube">
+                  <Youtube className="h-5 w-5" />
+                </SocialLink>
+                <SocialLink href={SOCIAL_LINKS.tiktok} label="TikTok">
+                  <TikTokIcon className="h-5 w-5" />
+                </SocialLink>
+                <SocialLink href={SOCIAL_LINKS.instagram} label="Instagram">
+                  <Instagram className="h-5 w-5" />
+                </SocialLink>
+                <SocialLink href="https://fireproductions.lk" label="Website">
+                  <Globe className="h-5 w-5" />
+                </SocialLink>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Bottom note */}
-          <motion.div variants={item} className="mt-10 rounded-2xl border border-border/60 bg-card/25 p-6 backdrop-blur-xl">
+          <motion.div
+            variants={item}
+            className="mt-6 rounded-2xl border border-border/60 bg-card/25 p-6 backdrop-blur-xl"
+          >
             <p className="text-sm text-muted">
-              Want to collaborate? We’re available for <span className="text-text font-semibold">music projects</span>,{" "}
-              <span className="text-text font-semibold">live acoustic production</span>,
+              Want to collaborate? We’re available for{" "}
+              <span className="text-text font-semibold">music projects</span>,{" "}
+              <span className="text-text font-semibold">live acoustic production</span>,{" "}
               <span className="text-text font-semibold">entertainment</span>, and{" "}
               <span className="text-text font-semibold">brand films</span>.
             </p>
