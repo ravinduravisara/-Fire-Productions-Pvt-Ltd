@@ -50,13 +50,13 @@ function TikTokIcon(props) {
 
 const LEADERSHIP = [
   {
-    name: "Founder Name",
+    name: "Shammi Dushan",
     role: "Founder • Fire Productions",
     image: founderImg,
     bio: "Leads creative direction across music and film — focused on story, craft, and studio-grade execution.",
   },
   {
-    name: "Co-Founder Name",
+    name: "Kavindu Asanga",
     role: "Director • Fire Entertainment",
     image: coFounderImg,
     bio: "Builds entertainment concepts and production workflows — delivering premium visuals with fast turnaround.",
