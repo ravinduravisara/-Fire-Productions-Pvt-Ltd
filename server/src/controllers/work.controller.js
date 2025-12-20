@@ -18,12 +18,20 @@ export const createWork = asyncHandler(async (req, res) => {
   }
   const Work = getWorkModel()
   const body = { ...req.body }
+  // Normalize images: accept imageUrls (array) or legacy imageUrl/image/url
+  let imageUrls = []
+  if (Array.isArray(body.imageUrls)) {
+    imageUrls = body.imageUrls.filter((u) => typeof u === 'string' && u.trim())
+  }
   if (!body.imageUrl) {
     if (typeof body.image === 'string') body.imageUrl = body.image
     if (typeof body.url === 'string' && body.url.startsWith('/uploads/')) body.imageUrl = body.url
   }
-  if (!body.imageUrl || typeof body.imageUrl !== 'string' || !body.imageUrl.trim()) {
-    return res.status(400).json({ message: 'Image URL is required. Upload an image first.' })
+  if (typeof body.imageUrl === 'string' && body.imageUrl.trim()) {
+    imageUrls = imageUrls.length ? imageUrls : [body.imageUrl.trim()]
+  }
+  if (!imageUrls.length) {
+    return res.status(400).json({ message: 'At least one image is required. Upload an image first.' })
   }
   // Basic validation and normalization
   if (!body.title || typeof body.title !== 'string' || !body.title.trim()) {
@@ -37,7 +45,8 @@ export const createWork = asyncHandler(async (req, res) => {
   const payload = {
     title: body.title.trim(),
     description: typeof body.description === 'string' ? body.description : '',
-    imageUrl: body.imageUrl.trim(),
+    imageUrl: imageUrls[0],
+    imageUrls,
     link: typeof body.link === 'string' ? body.link : '',
     category: typeof body.category === 'string' ? body.category : '',
     tags: tagsArr
@@ -55,14 +64,23 @@ export const updateWork = asyncHandler(async (req, res) => {
   const body = { ...req.body }
   const prev = await Work.findById(id)
   if (!prev) return res.status(404).json({ message: 'Not found' })
+  // Normalize images for update
+  let nextImageUrls = []
+  if (Array.isArray(body.imageUrls)) {
+    nextImageUrls = body.imageUrls.filter((u) => typeof u === 'string' && u.trim())
+  }
   if (!body.imageUrl) {
     if (typeof body.image === 'string') body.imageUrl = body.image
     if (typeof body.url === 'string' && body.url.startsWith('/uploads/')) body.imageUrl = body.url
   }
+  if (typeof body.imageUrl === 'string' && body.imageUrl.trim()) {
+    nextImageUrls = nextImageUrls.length ? nextImageUrls : [body.imageUrl.trim()]
+  }
   const payload = {
     title: body.title,
     description: body.description,
-    imageUrl: body.imageUrl,
+    imageUrl: nextImageUrls[0] || body.imageUrl,
+    imageUrls: nextImageUrls,
     link: body.link,
     category: body.category,
     tags: body.tags
@@ -70,7 +88,8 @@ export const updateWork = asyncHandler(async (req, res) => {
   const item = await Work.findByIdAndUpdate(id, payload, { new: true })
   if (!item) return res.status(404).json({ message: 'Not found' })
   try {
-    if (prev.imageUrl && body.imageUrl && String(prev.imageUrl) !== String(body.imageUrl)) {
+    // If primary image changed, try delete old
+    if (prev.imageUrl && payload.imageUrl && String(prev.imageUrl) !== String(payload.imageUrl)) {
       await deleteAssetByUrl(prev.imageUrl)
     }
   } catch {}
@@ -86,7 +105,8 @@ export const deleteWork = asyncHandler(async (req, res) => {
   const item = await Work.findByIdAndDelete(id)
   if (!item) return res.status(404).json({ message: 'Not found' })
   try {
-    const candidates = [item.imageUrl, item.image, item.url].filter((u) => typeof u === 'string' && u.trim())
+    const candidates = [item.imageUrl, item.image, item.url, ...(Array.isArray(item.imageUrls) ? item.imageUrls : [])]
+      .filter((u) => typeof u === 'string' && u.trim())
     for (const u of candidates) {
       try { await deleteAssetByUrl(u) } catch {}
     }

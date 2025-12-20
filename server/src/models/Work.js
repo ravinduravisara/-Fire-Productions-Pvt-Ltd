@@ -7,6 +7,7 @@ export function getWorkModel() {
       title: { type: String, required: true },
       description: { type: String },
       imageUrl: { type: String },
+      imageUrls: { type: [String], default: [] },
       link: { type: String },
       category: { type: String },
       tags: { type: [String], default: [] }

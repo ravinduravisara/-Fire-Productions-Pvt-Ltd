@@ -17,10 +17,30 @@ export default function FireCards({ items = [] }) {
           {(() => {
             const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
             const filesBase = apiBase.replace(/\/api$/, '')
-            const raw = w.imageUrl || w.image || w.url || ''
-            const imageSrc = raw ? (String(raw).startsWith('http') ? raw : `${filesBase}${raw}`) : ''
+            const list = Array.isArray(w.imageUrls) && w.imageUrls.length
+              ? w.imageUrls
+              : [w.imageUrl || w.image || w.url].filter(Boolean)
+
+            if (list.length <= 1) {
+              const raw = list[0] || ''
+              const imageSrc = raw ? (String(raw).startsWith('http') ? raw : `${filesBase}${raw}`) : ''
+              return (
+                <div className="aspect-video bg-surface" style={{ backgroundImage: `url(${imageSrc})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+              )
+            }
+
+            const six = list.slice(0, 6)
             return (
-              <div className="aspect-video bg-surface" style={{ backgroundImage: `url(${imageSrc})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+              <div className="grid grid-cols-3 gap-0.5 bg-surface">
+                {six.map((raw, idx) => {
+                  const src = String(raw).startsWith('http') ? raw : `${filesBase}${raw}`
+                  return (
+                    <div key={raw + idx} className="relative pt-[56%] bg-surface">
+                      <img src={src} alt="project" className="absolute inset-0 h-full w-full object-cover" />
+                    </div>
+                  )
+                })}
+              </div>
             )
           })()}
           <div className="p-4">

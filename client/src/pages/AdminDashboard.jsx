@@ -634,6 +634,9 @@ function EditWorkButton({ item, token, onSaved }) {
     title: item.title,
     link: item.link || "",
     imageUrl: item.imageUrl || "",
+    imageUrls: Array.isArray(item.imageUrls) && item.imageUrls.length
+      ? item.imageUrls
+      : (item.imageUrl ? [item.imageUrl] : []),
     category: item.category || "Acoustic",
     tags: (item.tags || []).join(", "),
   });
@@ -662,6 +665,9 @@ function EditWorkButton({ item, token, onSaved }) {
     try {
       const payload = {
         ...form,
+        imageUrls: (form.imageUrls && form.imageUrls.length)
+          ? form.imageUrls
+          : (form.imageUrl ? [form.imageUrl] : []),
         tags: form.tags
           ? form.tags.split(",").map((s) => s.trim()).filter(Boolean)
           : [],
@@ -683,7 +689,7 @@ function EditWorkButton({ item, token, onSaved }) {
         open={open}
         onClose={() => setOpen(false)}
         title="Edit Project"
-        subtitle="Update title, category, tags, link, and image"
+        subtitle="Update title, images (up to 6), category, tags, and link"
         icon={Film}
       >
         <form onSubmit={onSubmit} className="space-y-4">
@@ -726,14 +732,55 @@ function EditWorkButton({ item, token, onSaved }) {
             />
           </Field>
 
-          <Field label="Image URL" icon={ImageIcon}>
+          <Field label="Images (up to 6)">
             <input
-              name="imageUrl"
-              value={form.imageUrl}
-              onChange={onChange}
-              className={inputWithIcon}
-              placeholder="/uploads/xxx.jpg or full URL"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={async (e) => {
+                const files = Array.from(e.target.files || []);
+                if (!files.length) return;
+                setStatus("uploading");
+                setError("");
+                try {
+                  const urls = [];
+                  const remaining = 6 - (form.imageUrls?.length || 0);
+                  for (const file of files.slice(0, remaining)) {
+                    const { url } = await uploadImage(file, token);
+                    urls.push(url);
+                  }
+                  setForm((f) => ({
+                    ...f,
+                    imageUrl: f.imageUrl || urls[0] || "",
+                    imageUrls: [...(f.imageUrls || []), ...urls].slice(0, 6),
+                  }));
+                  setStatus("idle");
+                } catch (err) {
+                  setStatus("error");
+                  setError("Upload failed.");
+                }
+              }}
+              className={cx(inputBase, "file:mr-4 file:rounded-full file:border-0 file:bg-brand-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-brand-600/90")}
             />
+            {(form.imageUrls && form.imageUrls.length) ? (
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {form.imageUrls.slice(0,6).map((u, idx) => (
+                  <div key={u + idx} className="relative overflow-hidden rounded-xl border border-border/60 bg-background/30">
+                    <img src={u} alt={`Image ${idx+1}`} className="h-24 w-full object-cover" />
+                    <button
+                      type="button"
+                      className="absolute right-1 top-1 rounded-full border border-border/60 bg-card/40 px-2 py-1 text-xs text-text hover:bg-card/60"
+                      onClick={() => setForm((f) => {
+                        const next = (f.imageUrls || []).filter((x, i) => i !== idx);
+                        return { ...f, imageUrls: next, imageUrl: next[0] || f.imageUrl };
+                      })}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </Field>
 
           <div className="flex items-center justify-end gap-2 pt-2">
@@ -926,6 +973,7 @@ function AddWork({ token }) {
     title: "",
     description: "",
     imageUrl: "",
+    imageUrls: [],
     link: "",
     tags: "",
     category: "Acoustic",
@@ -971,14 +1019,23 @@ function AddWork({ token }) {
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const onFile = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
     setStatus("uploading");
     setError("");
 
     try {
-      const { url } = await uploadImage(file, token);
-      setForm((f) => ({ ...f, imageUrl: url }));
+      const urls = [];
+      const remaining = 6 - (form.imageUrls?.length || 0);
+      for (const file of files.slice(0, remaining)) {
+        const { url } = await uploadImage(file, token);
+        urls.push(url);
+      }
+      setForm((f) => ({
+        ...f,
+        imageUrl: f.imageUrl || urls[0] || "",
+        imageUrls: [...(f.imageUrls || []), ...urls].slice(0, 6),
+      }));
       setStatus("idle");
     } catch (err) {
       setStatus("error");
@@ -991,15 +1048,18 @@ function AddWork({ token }) {
     setStatus("loading");
     setError("");
 
-    if (!form.imageUrl) {
+    if (!(form.imageUrls && form.imageUrls.length) && !form.imageUrl) {
       setStatus("error");
-      setError("Please upload a cover image first.");
+      setError("Please upload at least one image first.");
       return;
     }
 
     try {
       const payload = {
         ...form,
+        imageUrls: (form.imageUrls && form.imageUrls.length)
+          ? form.imageUrls
+          : (form.imageUrl ? [form.imageUrl] : []),
         tags: form.tags
           ? form.tags.split(",").map((t) => t.trim()).filter(Boolean)
           : [form.category].filter(Boolean),
@@ -1007,7 +1067,7 @@ function AddWork({ token }) {
 
       await createWork(payload, token);
       setStatus("success");
-      setForm({ title: "", description: "", imageUrl: "", link: "", tags: "", category: "Acoustic" });
+      setForm({ title: "", description: "", imageUrl: "", imageUrls: [], link: "", tags: "", category: "Acoustic" });
     } catch (e) {
       setStatus("error");
       const msg = e?.response?.data?.message || "Failed to save project.";
@@ -1015,7 +1075,7 @@ function AddWork({ token }) {
     }
   };
 
-  const resetForm = () => setForm({ title: "", description: "", imageUrl: "", link: "", tags: "", category: "Acoustic" });
+  const resetForm = () => setForm({ title: "", description: "", imageUrl: "", imageUrls: [], link: "", tags: "", category: "Acoustic" });
   const actions = [
     { label: "Reset", icon: RotateCcw, onClick: resetForm },
   ];
@@ -1033,18 +1093,23 @@ function AddWork({ token }) {
           />
         </Field>
 
-        <Field label="Cover Image">
+        <Field label="Images (up to 6)">
           <input
             type="file"
             accept="image/*"
+            multiple
             onChange={onFile}
             className={cx(inputBase, "file:mr-4 file:rounded-full file:border-0 file:bg-brand-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-brand-600/90")}
           />
-          {form.imageUrl && (
-            <p className="mt-2 text-xs text-muted">
-              Uploaded: <span className="text-text font-semibold">{form.imageUrl}</span>
-            </p>
-          )}
+          {(form.imageUrls && form.imageUrls.length) ? (
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {form.imageUrls.slice(0,6).map((u, idx) => (
+                <div key={u + idx} className="relative overflow-hidden rounded-xl border border-border/60 bg-background/30">
+                  <img src={u} alt={`Image ${idx+1}`} className="h-24 w-full object-cover" />
+                </div>
+              ))}
+            </div>
+          ) : null}
         </Field>
 
         <Field label="Category" icon={ShieldCheck}>
