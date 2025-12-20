@@ -12,11 +12,11 @@ import {
 } from "lucide-react";
 import SectionTitle from "../components/ui/SectionTitle";
 
-// ✅ Put your images here:
-// public/assets/founder.jpg
-// public/assets/cofounder.jpg
-const founderImg = "/assets/founder.jpg";
-const coFounderImg = "/assets/cofounder.jpg";
+// ✅ Use module asset import for founder image
+import founderImg from "../assets/founder.jpg";
+// If you add a co-founder image, place it in src/assets and import similarly
+import coFounderImg from "../assets/cofounder.jpg";
+
 
 const highlights = [
   {
@@ -60,7 +60,7 @@ const LEADERSHIP = [
   },
   {
     name: "Co-Founder Name",
-    role: "Co-Founder • Fire Entertainment",
+    role: "Director • Fire Entertainment",
     image: coFounderImg,
     bio: "Builds entertainment concepts and production workflows — delivering premium visuals with fast turnaround.",
   },
@@ -218,7 +218,7 @@ export default function About() {
                     aria-hidden="true"
                   />
                   <div className="flex gap-4 p-5">
-                    <div className="relative h-16 w-16 flex-none overflow-hidden rounded-2xl border border-border/60 bg-background/25">
+                    <div className="relative h-[300px] w-[300px] flex-none overflow-hidden rounded-2xl border border-border/60 bg-background/25">
                       <img
                         src={p.image}
                         alt={p.name}
