@@ -1,0 +1,31 @@
+name: MongoDB Backup
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    name: Run MongoDB Backup
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Trigger backup on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            cd /opt/fire-productions
+            
+            echo "🔄 Running MongoDB backup..."
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile backup run --rm mongo-backup
+            
+            echo "📦 Current backups:"
+            ls -la mongo-backup/ | grep backup_ | tail -10
+            
+            echo "✅ Backup complete!"
