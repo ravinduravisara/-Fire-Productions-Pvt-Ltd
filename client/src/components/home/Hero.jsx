@@ -76,7 +76,7 @@ export default function Hero() {
           <motion.div variants={variants.item} className="flex justify-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-surface/70 px-4 py-2 text-sm text-text shadow-sm backdrop-blur">
               <Sparkles className="h-4 w-4 text-secondary" />
-              <span className="font-medium">Music • Acoustic • Entertainment • Film Production</span>
+              <span className="font-medium">Music • Acoustic • Entertainment </span>
               <span className="h-1 w-1 rounded-full bg-border/60" />
               <span className="text-muted">Premium creative studio</span>
             </div>
