@@ -10,6 +10,7 @@ jobs:
   backup:
     name: Run MongoDB Backup
     runs-on: ubuntu-latest
+    environment: VPS_HOST
     
     steps:
       - name: Trigger backup on VPS
