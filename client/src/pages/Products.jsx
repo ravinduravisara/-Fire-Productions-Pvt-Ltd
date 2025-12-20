@@ -142,12 +142,18 @@ function CartDrawer({ open, onClose, cart, onUpdateQty, onRemove, onClear }) {
   );
 
   const message = useMemo(() => {
-    const lines = cart.map(
-      (p) => `• ${p.title} x${p.qty} — LKR ${(p.price * p.qty).toLocaleString()}`
-    );
-    const text = `Hello, I would like to order:\n${lines.join(
-      "\n"
-    )}\nTotal: LKR ${total.toLocaleString()}`;
+    const lines = cart.map((p) => {
+      const cat = [p.category, p.subCategory].filter(Boolean).join(" / ");
+      const desc = (p.description || "").trim();
+      const parts = [
+        `• ${p.title} x${p.qty}`,
+        cat ? cat : null,
+        desc ? desc : null,
+        `LKR ${(p.price * p.qty).toLocaleString()}`,
+      ].filter(Boolean);
+      return parts.join(" — ");
+    });
+    const text = `Hello, I would like to order:\n${lines.join("\n")}\nTotal: LKR ${total.toLocaleString()}`;
     return encodeURIComponent(text);
   }, [cart, total]);
 
@@ -340,7 +346,18 @@ export default function Products() {
       if (existing) {
         return prev.map((p) => (p.id === id ? { ...p, qty: p.qty + 1 } : p));
       }
-      return [...prev, { id, title: itm.title, price: Number(itm.price || 0), qty: 1 }];
+      return [
+        ...prev,
+        {
+          id,
+          title: itm.title,
+          price: Number(itm.price || 0),
+          qty: 1,
+          category: itm.category || "",
+          subCategory: itm.subCategory || "",
+          description: itm.description || "",
+        },
+      ];
     });
     setDrawerOpen(true);
   };
