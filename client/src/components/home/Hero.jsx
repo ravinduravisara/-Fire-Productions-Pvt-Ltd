@@ -74,12 +74,20 @@ export default function Hero() {
         >
           {/* Badge */}
           <motion.div variants={variants.item} className="flex justify-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-surface/70 px-4 py-2 text-sm text-text shadow-sm backdrop-blur">
-              <Sparkles className="h-4 w-4 text-secondary" />
-              <span className="font-medium">Music • Acoustic • Entertainment • Film Production</span>
-              <span className="h-1 w-1 rounded-full bg-border/60" />
-              <span className="text-muted">Premium creative studio</span>
-            </div>
+              <div className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border border-border/60 bg-surface/70 px-4 py-2 text-xs sm:text-sm text-text shadow-sm backdrop-blur">
+                <Sparkles className="h-4 w-4 text-secondary" />
+                {(() => {
+                  const items = ["Music", "Acoustic", "Entertainment", "Film Production"]
+                  return items.map((label, idx) => (
+                    <span key={label} className="inline-flex items-center">
+                      {idx > 0 && <span className="mx-1 text-border/60">•</span>}
+                      <span className="font-medium">{label}</span>
+                    </span>
+                  ))
+                })()}
+                <span className="mx-1 hidden text-border/60 sm:inline">•</span>
+                <span className="w-full text-center text-muted sm:w-auto sm:text-left">Premium creative studio</span>
+              </div>
           </motion.div>
 
           {/* Title */}
