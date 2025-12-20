@@ -11,6 +11,8 @@ import {
   ImageOff,
   MessageCircle,
   ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import SectionTitle from "../components/ui/SectionTitle";
 import { getProducts } from "../services/products.api";
@@ -35,6 +37,18 @@ function getImageSrc(item) {
       : `${filesBase}${raw}`
     : "";
   return imageSrc;
+}
+
+function getImageSrcList(item) {
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  const filesBase = apiBase.replace(/\/api$/, "");
+  const raws = Array.isArray(item.imageUrls) && item.imageUrls.length
+    ? item.imageUrls
+    : [item.imageUrl || item.image || item.url].filter(Boolean);
+  return raws
+    .filter((u) => typeof u === 'string' && u.trim())
+    .slice(0, 3)
+    .map((u) => (String(u).startsWith('http') ? u : `${filesBase}${u}`));
 }
 
 function Pill({ children }) {
@@ -64,7 +78,12 @@ function ProductSkeleton() {
 
 function ProductCard({ item, onAdd }) {
   const reduce = useReducedMotion();
-  const imageSrc = getImageSrc(item);
+  const images = getImageSrcList(item);
+  const [active, setActive] = useState(0);
+  const hasImages = images && images.length > 0;
+  const max = hasImages ? images.length : 0;
+  const prev = () => setActive((i) => (i - 1 + max) % max);
+  const next = () => setActive((i) => (i + 1) % max);
 
   return (
     <motion.div
@@ -74,13 +93,53 @@ function ProductCard({ item, onAdd }) {
       className="group overflow-hidden rounded-2xl border border-border/60 bg-card/30 backdrop-blur-xl transition hover:-translate-y-1 hover:border-brand-600/25 hover:bg-card/45 hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/40"
     >
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-background/40">
-        {imageSrc ? (
-          <img
-            src={imageSrc}
-            alt={item.title}
-            loading="lazy"
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-          />
+        {hasImages ? (
+          <>
+            <img
+              src={images[Math.min(active, images.length - 1)]}
+              alt={item.title}
+              loading="lazy"
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+            />
+
+            {images.length > 1 && (
+              <>
+                {/* Prev/Next controls */}
+                <button
+                  type="button"
+                  aria-label="Previous image"
+                  onClick={prev}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-full border border-border/60 bg-card/30 p-2 text-text transition hover:bg-card/50"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next image"
+                  onClick={next}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-full border border-border/60 bg-card/30 p-2 text-text transition hover:bg-card/50"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+
+                {/* Dots */}
+                <div className="absolute inset-x-0 bottom-2 flex items-center justify-center gap-1.5">
+                  {images.map((_, i) => (
+                    <button
+                      key={`dot-${i}`}
+                      type="button"
+                      aria-label={`Go to image ${i + 1}`}
+                      onClick={() => setActive(i)}
+                      className={[
+                        "h-1.5 w-5 rounded-full transition",
+                        i === active ? "bg-brand-600" : "bg-background/60",
+                      ].join(" ")}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
         ) : (
           <div className="flex h-full w-full items-center justify-center text-muted">
             <ImageOff className="h-6 w-6" />

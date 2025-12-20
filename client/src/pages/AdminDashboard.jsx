@@ -382,6 +382,9 @@ function EditProductButton({ item, token, onSaved }) {
     price: item.price,
     description: item.description || "",
     imageUrl: item.imageUrl || "",
+    imageUrls: Array.isArray(item.imageUrls) && item.imageUrls.length
+      ? item.imageUrls
+      : (item.imageUrl ? [item.imageUrl] : []),
     category: item.category || '',
     subCategory: item.subCategory || '',
   });
@@ -399,11 +402,14 @@ function EditProductButton({ item, token, onSaved }) {
     setStatus("loading");
     setError("");
     try {
-      await adminUpdateProduct(
-        item.id,
-        { ...form, price: Number(form.price || 0) },
-        token
-      );
+      const payload = {
+        ...form,
+        imageUrls: (form.imageUrls && form.imageUrls.length)
+          ? form.imageUrls.slice(0,3)
+          : (form.imageUrl ? [form.imageUrl] : []),
+        price: Number(form.price || 0),
+      };
+      await adminUpdateProduct(item.id, payload, token);
       setStatus("success");
       setTimeout(() => setOpen(false), 450);
       onSaved?.();
@@ -474,6 +480,57 @@ function EditProductButton({ item, token, onSaved }) {
               inputMode="numeric"
               className={inputWithIcon}
             />
+          </Field>
+
+          <Field label="Images (up to 3)">
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={async (e) => {
+                const files = Array.from(e.target.files || []);
+                if (!files.length) return;
+                setStatus("uploading");
+                setError("");
+                try {
+                  const urls = [];
+                  const remaining = 3 - (form.imageUrls?.length || 0);
+                  for (const file of files.slice(0, remaining)) {
+                    const { url } = await uploadImage(file, token);
+                    urls.push(url);
+                  }
+                  setForm((f) => ({
+                    ...f,
+                    imageUrl: f.imageUrl || urls[0] || "",
+                    imageUrls: [...(f.imageUrls || []), ...urls].slice(0, 3),
+                  }));
+                  setStatus("idle");
+                } catch (err) {
+                  setStatus("error");
+                  setError("Upload failed.");
+                }
+              }}
+              className={cx(inputBase, "file:mr-4 file:rounded-full file:border-0 file:bg-brand-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-brand-600/90")}
+            />
+            {(form.imageUrls && form.imageUrls.length) ? (
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {form.imageUrls.slice(0,3).map((u, idx) => (
+                  <div key={u + idx} className="relative overflow-hidden rounded-xl border border-border/60 bg-background/30">
+                    <img src={u} alt={`Image ${idx+1}`} className="h-24 w-full object-cover" />
+                    <button
+                      type="button"
+                      className="absolute right-1 top-1 rounded-full border border-border/60 bg-card/40 px-2 py-1 text-xs text-text hover:bg-card/60"
+                      onClick={() => setForm((f) => {
+                        const next = (f.imageUrls || []).filter((x, i) => i !== idx);
+                        return { ...f, imageUrls: next, imageUrl: next[0] || f.imageUrl };
+                      })}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </Field>
 
           <Field label="Image URL" icon={ImageIcon}>
@@ -810,6 +867,7 @@ function AddProduct({ token }) {
     title: "",
     description: "",
     imageUrl: "",
+    imageUrls: [],
     price: "",
     category: '',
     subCategory: '',
@@ -826,14 +884,23 @@ function AddProduct({ token }) {
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const onFile = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
     setStatus("uploading");
     setError("");
 
     try {
-      const { url } = await uploadImage(file, token);
-      setForm((f) => ({ ...f, imageUrl: url }));
+      const urls = [];
+      const remaining = 3 - (form.imageUrls?.length || 0);
+      for (const file of files.slice(0, remaining)) {
+        const { url } = await uploadImage(file, token);
+        urls.push(url);
+      }
+      setForm((f) => ({
+        ...f,
+        imageUrl: f.imageUrl || urls[0] || "",
+        imageUrls: [...(f.imageUrls || []), ...urls].slice(0, 3),
+      }));
       setStatus("idle");
     } catch (err) {
       setStatus("error");
@@ -846,16 +913,23 @@ function AddProduct({ token }) {
     setStatus("loading");
     setError("");
 
-    if (!form.imageUrl) {
+    if (!(form.imageUrls && form.imageUrls.length) && !form.imageUrl) {
       setStatus("error");
-      setError("Please upload an image first.");
+      setError("Please upload at least one image first.");
       return;
     }
 
     try {
-      await createProduct({ ...form, price: Number(form.price || 0) }, token);
+      const payload = {
+        ...form,
+        imageUrls: (form.imageUrls && form.imageUrls.length)
+          ? form.imageUrls.slice(0,3)
+          : (form.imageUrl ? [form.imageUrl] : []),
+        price: Number(form.price || 0),
+      };
+      await createProduct(payload, token);
       setStatus("success");
-      setForm({ title: "", description: "", imageUrl: "", price: "" });
+      setForm({ title: "", description: "", imageUrl: "", imageUrls: [], price: "", category: '', subCategory: '' });
     } catch (e) {
       setStatus("error");
       const msg = e?.response?.data?.message || "Failed to save product.";
@@ -866,7 +940,7 @@ function AddProduct({ token }) {
   const reloadCategories = async () => {
     try { setCats(await listCategories()); } catch {}
   };
-  const resetForm = () => setForm({ title: "", description: "", imageUrl: "", price: "", category: '', subCategory: '' });
+  const resetForm = () => setForm({ title: "", description: "", imageUrl: "", imageUrls: [], price: "", category: '', subCategory: '' });
   const actions = [
     { label: "Reset", icon: RotateCcw, onClick: resetForm },
     { label: "Refresh Cats", icon: RefreshCcw, onClick: reloadCategories },
@@ -885,18 +959,33 @@ function AddProduct({ token }) {
           />
         </Field>
 
-        <Field label="Image">
+        <Field label="Images (up to 3)">
           <input
             type="file"
             accept="image/*"
+            multiple
             onChange={onFile}
             className={cx(inputBase, "file:mr-4 file:rounded-full file:border-0 file:bg-brand-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-brand-600/90")}
           />
-          {form.imageUrl && (
-            <p className="mt-2 text-xs text-muted">
-              Uploaded: <span className="text-text font-semibold">{form.imageUrl}</span>
-            </p>
-          )}
+          {(form.imageUrls && form.imageUrls.length) ? (
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {form.imageUrls.slice(0,3).map((u, idx) => (
+                <div key={u + idx} className="relative overflow-hidden rounded-xl border border-border/60 bg-background/30">
+                  <img src={u} alt={`Image ${idx+1}`} className="h-24 w-full object-cover" />
+                  <button
+                    type="button"
+                    className="absolute right-1 top-1 rounded-full border border-border/60 bg-card/40 px-2 py-1 text-xs text-text hover:bg-card/60"
+                    onClick={() => setForm((f) => {
+                      const next = (f.imageUrls || []).filter((x, i) => i !== idx);
+                      return { ...f, imageUrls: next, imageUrl: next[0] || f.imageUrl };
+                    })}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </Field>
 
         <Field label="Price (LKR)" icon={BadgeDollarSign}>

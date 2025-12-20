@@ -7,6 +7,7 @@ export function getProductModel() {
       title: { type: String, required: true },
       description: { type: String },
       imageUrl: { type: String },
+      imageUrls: { type: [String], default: [] },
       price: { type: Number, default: 0 },
       category: { type: String },
       subCategory: { type: String }
