@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Sparkles, Music2, Video, Mic2, PartyPopper, X, ArrowRight } from "lucide-react";
 import SectionTitle from "../components/ui/SectionTitle";
+import SEO from "../components/seo/SEO";
 import { getWorks } from "../services/works.api";
 import FireCards from "../components/home/FireCards";
 import { listServices } from "../services/services.api";
@@ -185,6 +186,11 @@ export default function Services() {
 
   return (
     <section className="relative py-16 sm:py-20">
+      <SEO
+        title="Services"
+        description="Explore Fire Productions services: music production, acoustic & live audio, film production, and entertainment."
+        path="/services"
+      />
       {/* subtle background glow */}
       <div
         className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-brand-600/5 via-transparent to-transparent"

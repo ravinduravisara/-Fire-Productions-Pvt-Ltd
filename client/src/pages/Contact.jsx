@@ -4,6 +4,7 @@ import { Mail, User, MessageSquare, CheckCircle2, AlertTriangle, Send } from "lu
 import SectionTitle from "../components/ui/SectionTitle";
 import Button from "../components/ui/Button";
 import { sendMessage } from "../services/contact.api";
+import SEO from "../components/seo/SEO";
 
 export default function Contact() {
   const reduce = useReducedMotion();
@@ -37,6 +38,11 @@ export default function Contact() {
 
   return (
     <section className="relative py-16 sm:py-20">
+      <SEO
+        title="Contact"
+        description="Contact Fire Productions. Tell us about your project and we’ll respond within 24 hours."
+        path="/contact"
+      />
       {/* Background glow */}
       <div
         className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-brand-600/10 via-transparent to-transparent"

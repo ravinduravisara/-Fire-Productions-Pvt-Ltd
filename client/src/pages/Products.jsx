@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import SectionTitle from "../components/ui/SectionTitle";
+import SEO from "../components/seo/SEO";
 import { getProducts } from "../services/products.api";
 import { listCategories } from "../services/categories.api";
 import Button from "../components/ui/Button";
@@ -453,6 +454,11 @@ export default function Products() {
 
   return (
     <section className="relative py-16 sm:py-20">
+      <SEO
+        title="Products"
+        description="Browse Fire Productions products and acoustic materials. Quality-assured items with fast delivery."
+        path="/products"
+      />
       {/* background glow */}
       <div
         className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-brand-600/10 via-transparent to-transparent"

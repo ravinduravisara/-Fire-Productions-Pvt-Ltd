@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import SectionTitle from '../components/ui/SectionTitle'
 import { validateAdmin } from '../services/admin.api'
+import SEO from '../components/seo/SEO'
 
 export default function AdminLogin() {
   const [token, setToken] = useState('')
@@ -24,6 +25,7 @@ export default function AdminLogin() {
   return (
     <section className="py-16">
       <div className="container max-w-md">
+        <SEO title="Admin Login" path="/admin/login" noindex />
         <SectionTitle title="Admin Login" />
         <form onSubmit={onSubmit} className="space-y-4">
           <div>

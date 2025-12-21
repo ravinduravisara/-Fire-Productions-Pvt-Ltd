@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import SectionTitle from "../components/ui/SectionTitle";
 import Button from "../components/ui/Button";
+import SEO from "../components/seo/SEO";
 import { createProduct } from "../services/products.api";
 import { createWork } from "../services/works.api";
 import { uploadImage } from "../services/upload.api";
@@ -210,6 +211,7 @@ export default function AdminDashboard() {
   if (!token) {
     return (
       <section className="relative py-16 sm:py-20">
+        <SEO title="Admin Dashboard" path="/admin/dashboard" noindex />
         <div
           className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-brand-600/10 via-transparent to-transparent"
           aria-hidden="true"
@@ -239,6 +241,7 @@ export default function AdminDashboard() {
 
   return (
     <section className="relative py-16 sm:py-20">
+      <SEO title="Admin Dashboard" path="/admin/dashboard" noindex />
       <div
         className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-brand-600/10 via-transparent to-transparent"
         aria-hidden="true"

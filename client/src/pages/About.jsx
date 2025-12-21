@@ -11,6 +11,7 @@ import {
   Youtube,
 } from "lucide-react";
 import SectionTitle from "../components/ui/SectionTitle";
+import SEO from "../components/seo/SEO";
 
 // ✅ Images from src/assets (Vite friendly)
 import founderImg from "../assets/founder.jpg";
@@ -108,6 +109,11 @@ export default function About() {
 
   return (
     <section className="relative overflow-hidden py-10 sm:py-16 lg:py-20">
+      <SEO
+        title="About"
+        description="Learn about Fire Productions — a multidisciplinary creative studio for music, acoustic, entertainment, and film production."
+        path="/about"
+      />
       {/* Background glow */}
       <div
         className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-brand-600/10 via-transparent to-transparent"
