@@ -1,5 +1,43 @@
 import { useState } from 'react'
 
+function ImageCarousel({ images = [], base = '' }) {
+  const [index, setIndex] = useState(0)
+
+  const raw = images[index] || ''
+  const src = raw ? (String(raw).startsWith('http') ? raw : `${base}${raw}`) : ''
+
+  return (
+    <div className="relative aspect-video bg-surface">
+      {src ? (
+        <img src={src} alt="project" className="absolute inset-0 h-full w-full object-contain" />
+      ) : (
+        <div className="absolute inset-0" />
+      )}
+
+      {images.length > 1 ? (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-between px-2">
+          <button
+            type="button"
+            aria-label="Previous image"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIndex((i) => (i - 1 + images.length) % images.length) }}
+            className="pointer-events-auto inline-flex h-8 w-8 items-center justify-center rounded-full bg-background/70 text-text ring-1 ring-border/60 backdrop-blur hover:bg-background"
+          >
+            ←
+          </button>
+          <button
+            type="button"
+            aria-label="Next image"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIndex((i) => (i + 1) % images.length) }}
+            className="pointer-events-auto inline-flex h-8 w-8 items-center justify-center rounded-full bg-background/70 text-text ring-1 ring-border/60 backdrop-blur hover:bg-background"
+          >
+            →
+          </button>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export default function FireCards({ items = [] }) {
   const [expandedIds, setExpandedIds] = useState(() => new Set())
 
@@ -25,8 +63,12 @@ export default function FireCards({ items = [] }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {items.map((w) => (
-          <a key={w._id || w.id} href={w.link || '#'} target="_blank" rel="noreferrer"
+      {items.map((w) => {
+        const isLink = !!w.link
+        const Wrapper = isLink ? 'a' : 'div'
+        const wrapperProps = isLink ? { href: w.link, target: '_blank', rel: 'noreferrer' } : {}
+        return (
+          <Wrapper key={w._id || w.id} {...wrapperProps}
             className="group rounded-lg overflow-hidden border border-border/60 hover:shadow-lg transition-shadow bg-surface">
           {(() => {
             const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
@@ -39,10 +81,21 @@ export default function FireCards({ items = [] }) {
               const raw = list[0] || ''
               const imageSrc = raw ? (String(raw).startsWith('http') ? raw : `${filesBase}${raw}`) : ''
               return (
-                <div className="aspect-video bg-surface" style={{ backgroundImage: `url(${imageSrc})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                <div className="relative aspect-video bg-surface">
+                  {imageSrc ? (
+                    <img src={imageSrc} alt="project" className="absolute inset-0 h-full w-full object-contain" />
+                  ) : null}
+                </div>
               )
             }
 
+            // For Fire Acoustic and Fire Entertainment, show one-by-one moving images
+            const isCarousel = ['Acoustic', 'Entertainment'].includes(w.category)
+            if (isCarousel) {
+              return <ImageCarousel images={list} base={filesBase} />
+            }
+
+            // Fallback: thumbnail grid for other categories
             const six = list.slice(0, 6)
             return (
               <div className="grid grid-cols-3 gap-0.5 bg-surface">
@@ -62,34 +115,24 @@ export default function FireCards({ items = [] }) {
             {w.description ? (() => {
               const id = w._id || w.id || w.title
               const isExpanded = id ? expandedIds.has(id) : false
-              const showToggle = String(w.description || '').trim().length > 140
 
               return (
                 <div className="mt-1">
-                  <p
-                    className={[
-                      'text-sm text-muted',
-                      isExpanded
-                        ? ''
-                        : 'overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]',
-                    ].join(' ')}
-                  >
-                    {w.description}
-                  </p>
-
-                  {showToggle ? (
-                    <button
-                      type="button"
-                      className="mt-1 text-xs font-semibold text-brand-600 hover:underline"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        toggleExpanded(id)
-                      }}
-                    >
-                      {isExpanded ? 'Less' : 'More'}
-                    </button>
+                  {isExpanded ? (
+                    <p className="text-sm text-muted">{w.description}</p>
                   ) : null}
+
+                  <button
+                    type="button"
+                    className="mt-1 text-xs font-semibold text-brand-600 hover:underline"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      toggleExpanded(id)
+                    }}
+                  >
+                    {isExpanded ? 'Less' : 'More'}
+                  </button>
                 </div>
               )
             })() : null}
@@ -99,8 +142,9 @@ export default function FireCards({ items = [] }) {
               </div>
             ) : null}
           </div>
-        </a>
-      ))}
+        </Wrapper>
+        )
+      })}
     </div>
   )
 }
