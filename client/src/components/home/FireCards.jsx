@@ -1,4 +1,18 @@
+import { useState } from 'react'
+
 export default function FireCards({ items = [] }) {
+  const [expandedIds, setExpandedIds] = useState(() => new Set())
+
+  const toggleExpanded = (id) => {
+    if (!id) return
+    setExpandedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   if (!items.length) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -45,9 +59,40 @@ export default function FireCards({ items = [] }) {
           })()}
           <div className="p-4">
             <h3 className="font-medium group-hover:text-brand-600 text-text">{w.title}</h3>
-            {w.description ? (
-              <p className="mt-1 text-sm text-muted">{w.description}</p>
-            ) : null}
+            {w.description ? (() => {
+              const id = w._id || w.id || w.title
+              const isExpanded = id ? expandedIds.has(id) : false
+              const showToggle = String(w.description || '').trim().length > 140
+
+              return (
+                <div className="mt-1">
+                  <p
+                    className={[
+                      'text-sm text-muted',
+                      isExpanded
+                        ? ''
+                        : 'overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]',
+                    ].join(' ')}
+                  >
+                    {w.description}
+                  </p>
+
+                  {showToggle ? (
+                    <button
+                      type="button"
+                      className="mt-1 text-xs font-semibold text-brand-600 hover:underline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        toggleExpanded(id)
+                      }}
+                    >
+                      {isExpanded ? 'Less' : 'More'}
+                    </button>
+                  ) : null}
+                </div>
+              )
+            })() : null}
             {w.tags?.length ? (
               <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted">
                 {w.tags.map((t) => (<span key={t} className="px-2 py-0.5 rounded-full bg-background/60 border border-border/40">{t}</span>))}

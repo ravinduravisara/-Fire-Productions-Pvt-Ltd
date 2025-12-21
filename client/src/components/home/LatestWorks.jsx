@@ -11,7 +11,8 @@ export default function LatestWorks() {
     (async () => {
       try {
         const data = await getWorks()
-        setItems(data)
+        const list = Array.isArray(data) ? data : []
+        setItems(list.slice(0, 6))
       } catch (e) {
         console.error('Failed to fetch works', e)
       } finally {
