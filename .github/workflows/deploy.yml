@@ -35,17 +35,13 @@ jobs:
             echo "📥 Pulling latest code..."
             git pull origin main
             
-            # Build and restart containers
-            echo "🔨 Building Docker images..."
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml build --no-cache
+            # Backup database BEFORE doing anything
+            echo "💾 Backing up database before deploy..."
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile backup run --rm mongo-backup || echo "Backup skipped (first deploy or no data)"
             
-            # Stop old containers
-            echo "🛑 Stopping old containers..."
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml down
-            
-            # Start new containers
-            echo "🚀 Starting new containers..."
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+            # Build and restart containers (WITHOUT 'down' to preserve volumes)
+            echo "🔨 Building and restarting containers..."
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --force-recreate
             
             # Clean up old images
             echo "🧹 Cleaning up..."
