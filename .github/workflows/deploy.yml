@@ -39,9 +39,12 @@ jobs:
             echo "💾 Backing up database before deploy..."
             docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile backup run --rm mongo-backup || echo "Backup skipped (first deploy or no data)"
             
-            # Build and restart containers (WITHOUT 'down' to preserve volumes)
-            echo "🔨 Building and restarting containers..."
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --force-recreate
+            # ONLY rebuild server and client - NEVER touch MongoDB!
+            echo "🔨 Building server and client images..."
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml build server client
+            
+            echo "� Restarting server and client ONLY (MongoDB stays running)..."
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps --force-recreate server client
             
             # Clean up old images
             echo "🧹 Cleaning up..."
