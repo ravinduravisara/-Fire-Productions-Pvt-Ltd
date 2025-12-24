@@ -91,9 +91,24 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 echo "⏳ Waiting for MongoDB to start..."
 sleep 15
 
-# Restore database from backup
-echo "📦 Restoring database from backup..."
-docker compose exec -T mongodb mongorestore --db test /backup/test || echo "No backup to restore or already restored"
+# Only restore if database is empty (first time setup)
+echo "📦 Checking if database needs restoration..."
+DOC_COUNT=$(docker compose exec -T mongodb mongo --quiet test --eval "db.getCollectionNames().length" 2>/dev/null || echo "0")
+if [ "$DOC_COUNT" = "0" ] || [ -z "$DOC_COUNT" ]; then
+    # Find the most recent backup
+    LATEST_BACKUP=$(ls -dt /opt/fire-productions/mongo-backup/backup_* 2>/dev/null | head -1)
+    if [ -n "$LATEST_BACKUP" ] && [ -d "$LATEST_BACKUP/test" ]; then
+        echo "📦 Restoring from latest backup: $LATEST_BACKUP"
+        docker compose exec -T mongodb mongorestore --db test /backup/$(basename $LATEST_BACKUP)/test || echo "Restore failed or skipped"
+    elif [ -d "/opt/fire-productions/mongo-backup/test" ]; then
+        echo "📦 Restoring from legacy backup..."
+        docker compose exec -T mongodb mongorestore --db test /backup/test || echo "Restore failed or skipped"
+    else
+        echo "ℹ️  No backup found. Starting with empty database."
+    fi
+else
+    echo "✅ Database already has data ($DOC_COUNT collections). Skipping restore."
+fi
 
 # Show status
 echo ""
