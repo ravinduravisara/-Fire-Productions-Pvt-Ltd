@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Mail, User, MessageSquare, CheckCircle2, AlertTriangle, Send } from "lucide-react";
+import { Mail, User, MessageSquare, CheckCircle2, AlertTriangle, Send, Phone } from "lucide-react";
 import SectionTitle from "../components/ui/SectionTitle";
 import Button from "../components/ui/Button";
 import { sendMessage } from "../services/contact.api";
@@ -159,6 +159,48 @@ export default function Contact() {
                 )}
               </div>
             </form>
+
+            {/* Direct contact numbers */}
+            <div className="mt-6">
+              <h3 className="text-sm font-semibold text-text">Call us directly</h3>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <a
+                  href="tel:0779056716"
+                  className="group flex items-center justify-between rounded-2xl border border-border/60 bg-background/20 px-4 py-3 transition hover:border-brand-600/40 hover:bg-background/40"
+                  aria-label="Call Fire Music & Fire Films"
+                >
+                  <div className="flex items-center gap-3">
+                    <Phone className="h-4 w-4 text-muted group-hover:text-brand-600" />
+                    <span className="text-sm text-text">Fire Music &amp; Fire Films</span>
+                  </div>
+                  <span className="text-sm font-medium text-brand-600">077 905 6716</span>
+                </a>
+
+                <a
+                  href="tel:0743678001"
+                  className="group flex items-center justify-between rounded-2xl border border-border/60 bg-background/20 px-4 py-3 transition hover:border-brand-600/40 hover:bg-background/40"
+                  aria-label="Call Fire Acoustic"
+                >
+                  <div className="flex items-center gap-3">
+                    <Phone className="h-4 w-4 text-muted group-hover:text-brand-600" />
+                    <span className="text-sm text-text">Fire Acoustic</span>
+                  </div>
+                  <span className="text-sm font-medium text-brand-600">074 367 8001</span>
+                </a>
+
+                <a
+                  href="tel:0720354328"
+                  className="group flex items-center justify-between rounded-2xl border border-border/60 bg-background/20 px-4 py-3 transition hover:border-brand-600/40 hover:bg-background/40"
+                  aria-label="Call Fire Entertainment"
+                >
+                  <div className="flex items-center gap-3">
+                    <Phone className="h-4 w-4 text-muted group-hover:text-brand-600" />
+                    <span className="text-sm text-text">Fire Entertainment</span>
+                  </div>
+                  <span className="text-sm font-medium text-brand-600">072 035 4328</span>
+                </a>
+              </div>
+            </div>
 
             {/* Footer note */}
             <div className="mt-6 border-t border-border/60 pt-4 text-sm text-muted">
