@@ -62,7 +62,7 @@ export default function FireCards({ items = [] }) {
   }
 
   return (
-    <div className="columns-1 sm:columns-2 lg:columns-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {items.map((w, idx) => {
         const isLink = !!w.link
         const Wrapper = isLink ? 'a' : 'div'
@@ -73,7 +73,7 @@ export default function FireCards({ items = [] }) {
 
         return (
           <Wrapper key={cardId} {...wrapperProps}
-            className="block break-inside-avoid mb-6 group rounded-lg overflow-hidden border border-border/60 hover:shadow-lg transition-shadow bg-surface">
+            className="relative group rounded-lg overflow-hidden border border-border/60 hover:shadow-lg transition-shadow bg-surface">
           {(() => {
             const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
             const filesBase = apiBase.replace(/\/api$/, '')
@@ -118,10 +118,6 @@ export default function FireCards({ items = [] }) {
             <h3 className="font-medium group-hover:text-brand-600 text-text">{w.title}</h3>
             {w.description ? (
               <div className="mt-1">
-                {isExpanded ? (
-                  <p className="text-sm text-muted whitespace-pre-line leading-relaxed">{w.description}</p>
-                ) : null}
-
                 <button
                   type="button"
                   className="mt-1 text-xs font-semibold text-brand-600 hover:underline"
@@ -138,6 +134,22 @@ export default function FireCards({ items = [] }) {
             {w.tags?.length ? (
               <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted">
                 {w.tags.map((t) => (<span key={t} className="px-2 py-0.5 rounded-full bg-background/60 border border-border/40">{t}</span>))}
+              </div>
+            ) : null}
+            {/* Overlay description that does not change card height */}
+            {isExpanded && w.description ? (
+              <div className="absolute inset-0 z-10 bg-background/90 backdrop-blur-sm p-4 overflow-auto">
+                <div className="flex items-start justify-between">
+                  <h4 className="text-sm font-semibold text-text">{w.title}</h4>
+                  <button
+                    type="button"
+                    className="text-xs font-semibold text-brand-600 hover:underline"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleExpanded(cardId) }}
+                  >
+                    Close
+                  </button>
+                </div>
+                <p className="mt-2 text-sm text-muted whitespace-pre-line leading-relaxed">{w.description}</p>
               </div>
             ) : null}
           </div>
