@@ -77,7 +77,7 @@ function ProductSkeleton() {
   );
 }
 
-function ProductCard({ item, onAdd }) {
+function ProductCard({ item, onAdd, onPreview }) {
   const reduce = useReducedMotion();
   const images = getImageSrcList(item);
   const [active, setActive] = useState(0);
@@ -91,7 +91,8 @@ function ProductCard({ item, onAdd }) {
       initial={reduce ? { opacity: 0 } : { opacity: 0, y: 10, filter: "blur(6px)" }}
       animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, filter: "blur(0px)" }}
       transition={reduce ? { duration: 0.01 } : { duration: 0.35 }}
-      className="group overflow-hidden rounded-2xl border border-border/60 bg-card/30 backdrop-blur-xl transition hover:-translate-y-1 hover:border-brand-600/25 hover:bg-card/45 hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/40"
+      className="group overflow-hidden rounded-2xl border border-border/60 bg-card/30 backdrop-blur-xl transition hover:-translate-y-1 hover:border-brand-600/25 hover:bg-card/45 hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/40 cursor-pointer"
+      onClick={() => onPreview?.(item)}
     >
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-background/40">
         {hasImages ? (
@@ -109,7 +110,7 @@ function ProductCard({ item, onAdd }) {
                 <button
                   type="button"
                   aria-label="Previous image"
-                  onClick={prev}
+                  onClick={(e) => { e.stopPropagation(); prev(); }}
                   className="absolute left-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-full border border-border/60 bg-card/30 p-2 text-text transition hover:bg-card/50"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -117,7 +118,7 @@ function ProductCard({ item, onAdd }) {
                 <button
                   type="button"
                   aria-label="Next image"
-                  onClick={next}
+                  onClick={(e) => { e.stopPropagation(); next(); }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-full border border-border/60 bg-card/30 p-2 text-text transition hover:bg-card/50"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -130,7 +131,7 @@ function ProductCard({ item, onAdd }) {
                       key={`dot-${i}`}
                       type="button"
                       aria-label={`Go to image ${i + 1}`}
-                      onClick={() => setActive(i)}
+                      onClick={(e) => { e.stopPropagation(); setActive(i); }}
                       className={[
                         "h-1.5 w-5 rounded-full transition",
                         i === active ? "bg-brand-600" : "bg-background/60",
@@ -181,8 +182,9 @@ function ProductCard({ item, onAdd }) {
         <div className="mt-5 flex items-center justify-between">
           <span className="text-xs text-muted">Fast delivery • Quality assured</span>
           <Button
-            onClick={() => onAdd(item)}
-            className="group/btn inline-flex items-center gap-2 rounded-full"
+            onClick={(e) => { e.stopPropagation(); onAdd(item); }}
+            className="group/btn inline-flex items-center gap-2"
+            size="sm"
           >
             <Plus className="h-4 w-4 transition-transform group-hover/btn:rotate-90" />
             Add
@@ -190,6 +192,183 @@ function ProductCard({ item, onAdd }) {
         </div>
       </div>
     </motion.div>
+  );
+}
+
+function ProductPreview({ open, item, onClose, onAdd }) {
+  const reduce = useReducedMotion();
+  const images = item ? getImageSrcList(item) : [];
+  const [active, setActive] = useState(0);
+  const [qty, setQty] = useState(1);
+
+  const inc = () => setQty((q) => Math.min(99, q + 1));
+  const dec = () => setQty((q) => Math.max(1, q - 1));
+
+  return (
+    <AnimatePresence>
+      {open && item && (
+        <motion.div
+          className="fixed inset-0 z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/50"
+            onClick={onClose}
+            aria-label="Close preview"
+          />
+
+          <motion.div
+            className="relative mx-auto mt-10 w-full max-w-4xl px-4"
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14, filter: "blur(8px)" }}
+            animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={reduce ? { opacity: 0 } : { opacity: 0, y: 14, filter: "blur(8px)" }}
+            transition={reduce ? { duration: 0.01 } : { duration: 0.25 }}
+          >
+            <div className="overflow-hidden rounded-3xl border border-border/60 bg-background/90 backdrop-blur-xl">
+              <div className="grid grid-cols-1 gap-0 md:grid-cols-2">
+                {/* Images */}
+                <div className="relative bg-background/40">
+                  {images.length ? (
+                    <div className="relative">
+                      <img
+                        src={images[Math.min(active, images.length - 1)]}
+                        alt={item.title}
+                        className="aspect-[4/3] w-full object-contain bg-background"
+                      />
+
+                      {/* Prev/Next controls */}
+                      {images.length > 1 && (
+                        <>
+                          <button
+                            type="button"
+                            aria-label="Previous image"
+                            onClick={() => setActive((i) => (i - 1 + images.length) % images.length)}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-full border border-border/60 bg-card/30 p-2 text-text transition hover:bg-card/50"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Next image"
+                            onClick={() => setActive((i) => (i + 1) % images.length)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-full border border-border/60 bg-card/30 p-2 text-text transition hover:bg-card/50"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="aspect-[4/3] flex items-center justify-center text-muted">
+                      <ImageOff className="h-6 w-6" />
+                    </div>
+                  )}
+
+                  {/* Thumbnails */}
+                  {images.length > 1 && (
+                    <div className="border-t border-border/60 bg-background/50 p-3">
+                      <div className="flex items-center gap-2 overflow-x-auto">
+                        {images.map((src, i) => (
+                          <button
+                            key={`pv-thumb-${i}`}
+                            type="button"
+                            onClick={() => setActive(i)}
+                            className={[
+                              "relative h-16 w-24 shrink-0 overflow-hidden rounded-xl border",
+                              i === active ? "border-brand-600 ring-2 ring-brand-600/30" : "border-border/60",
+                            ].join(" ")}
+                            aria-label={`Show image ${i + 1}`}
+                          >
+                            <img src={src} alt="thumb" className="h-full w-full object-contain bg-background" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Details */}
+                <div className="p-6">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-base font-semibold text-text">{item.title}</h3>
+                      <div className="mt-1 text-xs text-muted">
+                        {item.subCategory ? `${item.category} • ${item.subCategory}` : (item.category || "Fire Acoustic")}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="inline-flex items-center justify-center rounded-full border border-border/60 bg-card/30 p-2 text-text transition hover:bg-card/50"
+                      aria-label="Close"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <div className="mt-4 inline-flex items-center gap-2">
+                    <span className="rounded-full bg-brand-600/12 px-3 py-1 text-sm font-semibold text-brand-600 ring-1 ring-brand-600/25">
+                      {formatLKR(item.price)}
+                    </span>
+                    <span className="text-xs text-muted">In stock</span>
+                  </div>
+
+                  <p className="mt-4 text-sm leading-relaxed text-muted">
+                    {item.description || "Premium product from Fire Acoustic."}
+                  </p>
+
+                  {/* Qty + Actions */}
+                  <div className="mt-6 flex items-center justify-between">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/25 px-2 py-1">
+                      <button
+                        type="button"
+                        onClick={dec}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-card/30 text-text transition hover:bg-card/50"
+                        aria-label="Decrease quantity"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <span className="min-w-10 text-center text-sm font-semibold text-text">{qty}</span>
+                      <button
+                        type="button"
+                        onClick={inc}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-card/30 text-text transition hover:bg-card/50"
+                        aria-label="Increase quantity"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={() => onAdd(item, qty)}
+                        className="inline-flex items-center gap-2"
+                        size="sm"
+                      >
+                        <ShoppingCart className="h-4 w-4" />
+                        Add to Cart
+                      </Button>
+                      <a
+                        className="inline-flex items-center gap-2 rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-green-500"
+                        href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hello, I'm interested in ${item.title} — ${formatLKR(item.price)} (Qty ${qty})`)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Buy Now
+                        <ArrowUpRight className="h-4 w-4 opacity-90" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -367,6 +546,8 @@ export default function Products() {
 
   const [cart, setCart] = useState([]); // [{id,title,price,qty}]
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [previewItem, setPreviewItem] = useState(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   // UI controls
   const [query, setQuery] = useState("");
@@ -399,12 +580,12 @@ export default function Products() {
     })();
   }, []);
 
-  const addToCart = (itm) => {
+  const addToCart = (itm, qty = 1) => {
     const id = itm._id || itm.id;
     setCart((prev) => {
       const existing = prev.find((p) => p.id === id);
       if (existing) {
-        return prev.map((p) => (p.id === id ? { ...p, qty: p.qty + 1 } : p));
+        return prev.map((p) => (p.id === id ? { ...p, qty: p.qty + Math.max(1, Number(qty) || 1) } : p));
       }
       return [
         ...prev,
@@ -412,7 +593,7 @@ export default function Products() {
           id,
           title: itm.title,
           price: Number(itm.price || 0),
-          qty: 1,
+          qty: Math.max(1, Number(qty) || 1),
           category: itm.category || "",
           subCategory: itm.subCategory || "",
           description: itm.description || "",
@@ -607,7 +788,12 @@ export default function Products() {
 
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {filtered.map((item) => (
-                  <ProductCard key={item._id || item.id} item={item} onAdd={addToCart} />
+                  <ProductCard
+                    key={item._id || item.id}
+                    item={item}
+                    onAdd={addToCart}
+                    onPreview={(itm) => { setPreviewItem(itm); setPreviewOpen(true); }}
+                  />
                 ))}
               </div>
 
@@ -621,6 +807,14 @@ export default function Products() {
           )}
         </div>
       </div>
+
+      {/* Preview modal */}
+      <ProductPreview
+        open={previewOpen}
+        item={previewItem}
+        onClose={() => setPreviewOpen(false)}
+        onAdd={(item, qty) => { addToCart(item, qty); setPreviewOpen(false); }}
+      />
 
       {/* Cart drawer */}
       <CartDrawer
