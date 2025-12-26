@@ -9,7 +9,8 @@ services:
     environment:
       MONGO_INITDB_DATABASE: test
     volumes:
-      - mongodb_data:/data/db
+      # Bind-mount MongoDB data to a host folder for persistence
+      - ./data/mongodb:/data/db
       - ./mongo-backup:/backup
     ports:
       - "27017:27017"
@@ -63,4 +64,4 @@ networks:
     driver: bridge
 
 volumes:
-  mongodb_data:
+  # Using a bind mount for /data/db above; named volume not required
