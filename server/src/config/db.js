@@ -1,5 +1,7 @@
-import mongoose from 'mongoose'
+import { PrismaClient } from '@prisma/client'
 import { env } from './env.js'
+
+export const prisma = new PrismaClient()
 
 let connected = false
 export function isConnected() {
@@ -7,13 +9,18 @@ export function isConnected() {
 }
 
 export async function connectDB() {
-  if (!env.MONGO_URI) {
-    throw new Error('MONGO_URI is not set')
+  if (!env.POSTGRES_URL) {
+    throw new Error('POSTGRES_URL is not set')
   }
-  const uri = env.MONGO_URI
-  await mongoose.connect(uri, {
-    // useNewUrlParser/useUnifiedTopology are defaults in Mongoose v6+
-  })
-  connected = true
-  console.log('MongoDB connected')
+  try {
+    await prisma.$connect()
+    // Basic ping
+    await prisma.$queryRaw`SELECT 1`
+    connected = true
+    console.log('PostgreSQL connected')
+  } catch (err) {
+    connected = false
+    console.error('PostgreSQL connection error:', err?.message || err)
+    throw err
+  }
 }

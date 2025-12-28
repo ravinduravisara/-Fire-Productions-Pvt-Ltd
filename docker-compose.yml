@@ -1,21 +1,22 @@
 # Fire Productions Docker Compose Configuration
 
 services:
-  # MongoDB Database
-  mongodb:
-    image: mongo:4.4
-    container_name: fire-mongodb
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: fire-postgres
     restart: unless-stopped
     environment:
-      MONGO_INITDB_DATABASE: test
+      POSTGRES_DB: firedb
+      POSTGRES_USER: fire
+      POSTGRES_PASSWORD: firepassword
     volumes:
-      # Persist MongoDB data using a named volume (more reliable across OS/filesystems)
-      - mongo-data:/data/db
-      - ./mongo-backup:/backup
+      - postgres-data:/var/lib/postgresql/data
     ports:
-      - "27017:27017"
+      - "5432:5432"
     healthcheck:
-      test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')" ]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,9 +34,11 @@ services:
     environment:
       NODE_ENV: production
       PORT: 5000
-      MONGO_URI: mongodb://mongodb:27017/test
+      # Deprecated: MONGO_URI removed; using Postgres only
+      # Prisma Postgres URL for the API
+      POSTGRES_URL: postgresql://fire:firepassword@postgres:5432/firedb?schema=public
     depends_on:
-      mongodb:
+      postgres:
         condition: service_healthy
     ports:
       - "5000:5000"
@@ -64,5 +67,5 @@ networks:
     driver: bridge
 
 volumes:
-  # Named volume for MongoDB data persistence
-  mongo-data:
+  # Named volume for PostgreSQL data persistence
+  postgres-data:

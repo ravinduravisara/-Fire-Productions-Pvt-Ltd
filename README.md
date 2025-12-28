@@ -1,10 +1,10 @@
 # Fire Creative — Full Stack Website
 
-A React (Vite + Tailwind) frontend with a Node.js (Express + MongoDB) backend.
+A React (Vite + Tailwind) frontend with a Node.js (Express + PostgreSQL via Prisma) backend.
 
 ## Prerequisites
 - Node.js 18+ and npm
-- MongoDB Atlas or local MongoDB (optional for UI dev)
+- PostgreSQL 14+ (Docker Desktop recommended) or a managed Postgres
 
 ## Quick Start
 
@@ -24,11 +24,11 @@ npm run dev
 Create `server/.env` with:
 
 ```
-MONGO_URI=your-mongodb-connection-string
+POSTGRES_URL=postgresql://user:pass@host:5432/dbname?schema=public
 PORT=5000
 ```
 
-If `MONGO_URI` is not set, the API starts without DB connection (read/write operations will fail), which is fine for frontend scaffolding.
+If `POSTGRES_URL` is not set, the API starts without DB connection (read/write operations will fail), which is fine for frontend scaffolding.
 
 ## Scripts
 - Root `dev`: runs client (Vite) and server (nodemon) concurrently.
@@ -40,12 +40,13 @@ If `MONGO_URI` is not set, the API starts without DB connection (read/write oper
 ```
 fire-creative/
   client/      # Vite + React + Tailwind
-  server/      # Express + MongoDB (Mongoose)
+  server/      # Express + PostgreSQL (Prisma)
 ```
 
 ## Deploy
 - Frontend: Build with `npm run build --prefix client` → `client/dist`
 - Backend: Deploy `server` folder to your Node host with env vars
+- Database: Use Docker Compose `postgres` service or point `POSTGRES_URL` to your managed database
 
 ## License
 Proprietary — All rights reserved by Fire Acoustic (Pvt) Ltd.

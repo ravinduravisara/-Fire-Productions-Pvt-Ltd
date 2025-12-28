@@ -1,5 +1,4 @@
-import { getWorkModel } from '../models/Work.js'
-import { isConnected } from '../config/db.js'
+import { isConnected, prisma } from '../config/db.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { deleteAssetByUrl } from '../utils/assets.js'
 
@@ -7,8 +6,7 @@ export const listWorks = asyncHandler(async (req, res) => {
   if (!isConnected()) {
     return res.status(503).json({ message: 'DB not connected' })
   }
-  const Work = getWorkModel()
-  const works = await Work.find().sort({ createdAt: -1 })
+  const works = await prisma.work.findMany({ orderBy: { createdAt: 'desc' } })
   res.json(works)
 })
 
@@ -16,7 +14,6 @@ export const createWork = asyncHandler(async (req, res) => {
   if (!isConnected()) {
     return res.status(503).json({ message: 'DB not connected' })
   }
-  const Work = getWorkModel()
   const body = { ...req.body }
   // Normalize images: accept imageUrls (array) or legacy imageUrl/image/url
   let imageUrls = []
@@ -51,7 +48,7 @@ export const createWork = asyncHandler(async (req, res) => {
     category: typeof body.category === 'string' ? body.category : '',
     tags: tagsArr
   }
-  const work = await Work.create(payload)
+  const work = await prisma.work.create({ data: payload })
   res.status(201).json(work)
 })
 
@@ -59,10 +56,9 @@ export const updateWork = asyncHandler(async (req, res) => {
   if (!isConnected()) {
     return res.status(503).json({ message: 'DB not connected' })
   }
-  const Work = getWorkModel()
   const id = req.params.id
   const body = { ...req.body }
-  const prev = await Work.findById(id)
+  const prev = await prisma.work.findUnique({ where: { id } })
   if (!prev) return res.status(404).json({ message: 'Not found' })
   // Normalize images for update
   let nextImageUrls = []
@@ -85,7 +81,7 @@ export const updateWork = asyncHandler(async (req, res) => {
     category: body.category,
     tags: body.tags
   }
-  const item = await Work.findByIdAndUpdate(id, payload, { new: true })
+  const item = await prisma.work.update({ where: { id }, data: payload })
   if (!item) return res.status(404).json({ message: 'Not found' })
   try {
     // If primary image changed, try delete old
@@ -100,10 +96,13 @@ export const deleteWork = asyncHandler(async (req, res) => {
   if (!isConnected()) {
     return res.status(503).json({ message: 'DB not connected' })
   }
-  const Work = getWorkModel()
   const id = req.params.id
-  const item = await Work.findByIdAndDelete(id)
-  if (!item) return res.status(404).json({ message: 'Not found' })
+  let item
+  try {
+    item = await prisma.work.delete({ where: { id } })
+  } catch {
+    return res.status(404).json({ message: 'Not found' })
+  }
   try {
     const candidates = [item.imageUrl, item.image, item.url, ...(Array.isArray(item.imageUrls) ? item.imageUrls : [])]
       .filter((u) => typeof u === 'string' && u.trim())

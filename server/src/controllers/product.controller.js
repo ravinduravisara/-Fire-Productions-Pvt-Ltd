@@ -1,15 +1,12 @@
-import { getProductModel } from '../models/Product.js'
-import { isConnected } from '../config/db.js'
+import { isConnected, prisma } from '../config/db.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
-import { getCategoryModel } from '../models/Category.js'
 import { deleteAssetByUrl } from '../utils/assets.js'
 
 export const listProducts = asyncHandler(async (req, res) => {
   if (!isConnected()) {
     return res.status(503).json({ message: 'DB not connected' })
   }
-  const Product = getProductModel()
-  const products = await Product.find().sort({ createdAt: -1 })
+  const products = await prisma.product.findMany({ orderBy: { createdAt: 'desc' } })
   res.json(products)
 })
 
@@ -17,7 +14,6 @@ export const createProduct = asyncHandler(async (req, res) => {
   if (!isConnected()) {
     return res.status(503).json({ message: 'DB not connected' })
   }
-  const Product = getProductModel()
   const body = { ...req.body }
   // Normalize images: accept imageUrls (array) or legacy imageUrl/image/url
   let imageUrls = []
@@ -48,13 +44,12 @@ export const createProduct = asyncHandler(async (req, res) => {
   }
   const subCategoryName = typeof body.subCategory === 'string' ? body.subCategory.trim() : ''
   // Validate against Category model
-  const Category = getCategoryModel()
-  const parentCat = await Category.findOne({ name: categoryName, parent: null })
+  const parentCat = await prisma.category.findFirst({ where: { name: categoryName, parentId: null } })
   if (!parentCat) {
     return res.status(400).json({ message: 'Category not found. Add it in admin first.' })
   }
   if (subCategoryName) {
-    const child = await Category.findOne({ name: subCategoryName, parent: parentCat._id })
+    const child = await prisma.category.findFirst({ where: { name: subCategoryName, parentId: parentCat.id } })
     if (!child) {
       return res.status(400).json({ message: 'Subcategory not found for selected category.' })
     }
@@ -68,7 +63,7 @@ export const createProduct = asyncHandler(async (req, res) => {
     category: categoryName,
     subCategory: subCategoryName || ''
   }
-  const product = await Product.create(payload)
+  const product = await prisma.product.create({ data: payload })
   res.status(201).json(product)
 })
 
@@ -76,11 +71,10 @@ export const updateProduct = asyncHandler(async (req, res) => {
   if (!isConnected()) {
     return res.status(503).json({ message: 'DB not connected' })
   }
-  const Product = getProductModel()
   const id = req.params.id
   const body = { ...req.body }
   // Load existing to compare image changes
-  const prev = await Product.findById(id)
+  const prev = await prisma.product.findUnique({ where: { id } })
   if (!prev) return res.status(404).json({ message: 'Not found' })
 
   // Normalize images: prefer provided imageUrls[], else fallback to legacy fields, else keep previous
@@ -114,7 +108,12 @@ export const updateProduct = asyncHandler(async (req, res) => {
     category: body.category,
     subCategory: body.subCategory
   }
-  const item = await Product.findByIdAndUpdate(id, payload, { new: true })
+  let item
+  try {
+    item = await prisma.product.update({ where: { id }, data: payload })
+  } catch {
+    return res.status(404).json({ message: 'Not found' })
+  }
   if (!item) return res.status(404).json({ message: 'Not found' })
   // If images changed, best-effort delete removed assets (including previous primary if removed)
   try {
@@ -133,10 +132,13 @@ export const deleteProduct = asyncHandler(async (req, res) => {
   if (!isConnected()) {
     return res.status(503).json({ message: 'DB not connected' })
   }
-  const Product = getProductModel()
   const id = req.params.id
-  const item = await Product.findByIdAndDelete(id)
-  if (!item) return res.status(404).json({ message: 'Not found' })
+  let item
+  try {
+    item = await prisma.product.delete({ where: { id } })
+  } catch {
+    return res.status(404).json({ message: 'Not found' })
+  }
   // Best-effort: delete linked image assets (primary + array + legacy fields)
   try {
     const candidates = [item.imageUrl, ...(Array.isArray(item.imageUrls) ? item.imageUrls : []), item.image, item.url]

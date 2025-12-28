@@ -1,8 +1,8 @@
 import express from 'express';
 import multer from 'multer';
-// No filesystem usage; we persist images in MongoDB only
+// Persist images in PostgreSQL via Prisma
 import { adminAuth } from '../middleware/adminAuth.js';
-import { getImageAssetModel } from '../models/ImageAsset.js';
+import { prisma } from '../config/db.js';
 
 const router = express.Router();
 
@@ -14,13 +14,14 @@ router.post('/', adminAuth, upload.single('image'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded' });
   }
-  // Save into MongoDB
-  const ImageAsset = getImageAssetModel();
-  const asset = await ImageAsset.create({
-    filename: req.file.originalname,
-    contentType: req.file.mimetype,
-    size: req.file.size,
-    data: req.file.buffer
+  // Save into PostgreSQL
+  const asset = await prisma.imageAsset.create({
+    data: {
+      filename: req.file.originalname,
+      contentType: req.file.mimetype,
+      size: req.file.size,
+      data: req.file.buffer
+    }
   });
   const url = `/api/assets/${asset.id}`;
   res.json({ url, id: asset.id });

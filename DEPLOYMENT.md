@@ -49,7 +49,7 @@ Edit `/opt/fire-productions/.env.production` on VPS:
 ```env
 NODE_ENV=production
 PORT=5000
-MONGO_URI=mongodb://mongodb:27017/test
+POSTGRES_URL=postgresql://fire:firepassword@postgres:5432/firedb?schema=public
 
 # SMTP (for contact form)
 SMTP_HOST=smtp.gmail.com
@@ -81,7 +81,8 @@ docker compose logs -f
 docker compose -f docker-compose.yml -f docker-compose.prod.yml restart
 
 # Run backup manually
-docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile backup run --rm mongo-backup
+# (Use pg_dump or your managed provider's backup tooling)
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec postgres pg_dump -U fire -d firedb -f /var/lib/postgresql/data/firedb.sql
 
 # Rebuild & redeploy
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build

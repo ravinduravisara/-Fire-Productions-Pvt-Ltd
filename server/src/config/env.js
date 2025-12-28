@@ -4,7 +4,9 @@ dotenv.config()
 export const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   PORT: process.env.PORT || 5000,
+  // Deprecated: MONGO_URI retained temporarily during migration
   MONGO_URI: process.env.MONGO_URI || process.env.DATABASE_URL || '',
+  POSTGRES_URL: process.env.POSTGRES_URL || '',
   ADMIN_TOKEN: process.env.ADMIN_TOKEN || '',
   MAIL_TO: process.env.MAIL_TO || 'fireproductionspvtltd@gmail.com',
   SMTP_HOST: process.env.SMTP_HOST || '',

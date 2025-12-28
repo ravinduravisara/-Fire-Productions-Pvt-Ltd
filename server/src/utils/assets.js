@@ -1,11 +1,11 @@
 import fs from 'fs'
 import path from 'path'
-import mongoose from 'mongoose'
-import { getImageAssetModel } from '../models/ImageAsset.js'
+import { prisma } from '../config/db.js'
 
 export function extractAssetIdFromUrl(url) {
   if (typeof url !== 'string') return null
-  const m = url.match(/\/api\/assets\/([a-fA-F0-9]{24})(?:$|[/?#])/)
+  // UUID v4 pattern (case-insensitive)
+  const m = url.match(/\/api\/assets\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})(?:$|[/?#])/)
   return m ? m[1] : null
 }
 
@@ -13,10 +13,11 @@ export async function deleteAssetByUrl(url) {
   if (!url || typeof url !== 'string') return false
   // Try DB-backed asset first
   const assetId = extractAssetIdFromUrl(url)
-  if (assetId && mongoose.Types.ObjectId.isValid(assetId)) {
-    const ImageAsset = getImageAssetModel()
-    const res = await ImageAsset.findByIdAndDelete(assetId)
-    return !!res
+  if (assetId) {
+    try {
+      await prisma.imageAsset.delete({ where: { id: assetId } })
+      return true
+    } catch {}
   }
   // Backward compatibility: remove local file if it points to /uploads
   const localMatch = url.match(/\/(?:uploads)\/(.+)$/i)
