@@ -80,12 +80,34 @@ docker compose logs -f
 # Restart services
 docker compose -f docker-compose.yml -f docker-compose.prod.yml restart
 
-# Run backup manually
-# (Use pg_dump or your managed provider's backup tooling)
-docker compose -f docker-compose.yml -f docker-compose.prod.yml exec postgres pg_dump -U fire -d firedb -f /var/lib/postgresql/data/firedb.sql
+# Run PostgreSQL backup manually
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile backup run --rm postgres-backup
+
+# Run Prisma migrations
+docker compose exec server npx prisma migrate deploy
 
 # Rebuild & redeploy
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+---
+
+## Database Backup & Restore
+
+### Backup
+```bash
+# Via Docker Compose (recommended)
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile backup run --rm postgres-backup
+
+# Direct pg_dump
+docker compose exec postgres pg_dump -U fire -d firedb -F c -f /tmp/backup.dump
+docker cp fire-postgres:/tmp/backup.dump ./postgres-backup/
+```
+
+### Restore
+```bash
+# From most recent backup
+docker compose exec postgres pg_restore -U fire -d firedb -c /backup/backup_YYYYMMDD_HHMMSS.dump
 ```
 
 ---
@@ -107,6 +129,7 @@ Then update `nginx.conf` to use SSL certificates.
 | Issue | Solution |
 |-------|----------|
 | Container won't start | `docker compose logs [service]` |
-| MongoDB connection error | Check `MONGO_URI` in `.env.production` |
+| PostgreSQL connection error | Check `POSTGRES_URL` in `.env.production` |
+| Prisma migration fails | `docker compose exec server npx prisma migrate deploy` |
 | GitHub Actions fails | Verify SSH key in secrets |
 | Port 80 in use | `systemctl stop apache2` or `nginx` |

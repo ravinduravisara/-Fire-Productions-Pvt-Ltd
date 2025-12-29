@@ -1,6 +1,6 @@
 #!/bin/bash
-# First-time VPS setup and deployment script
-# Run this on your VPS to set up everything
+# First-time VPS setup and deployment script for Fire Productions
+# Now uses PostgreSQL instead of MongoDB
 
 set -e
 
@@ -56,13 +56,18 @@ else
     cd "$APP_DIR"
 fi
 
+# Create backup directory
+mkdir -p postgres-backup
+
 # Create .env.production if it doesn't exist
 if [ ! -f ".env.production" ]; then
     echo "📝 Creating .env.production template..."
     cat > .env.production << 'EOF'
 NODE_ENV=production
 PORT=5000
-MONGO_URI=mongodb://mongodb:27017/test
+
+# PostgreSQL connection (used by Prisma)
+POSTGRES_URL=postgresql://fire:firepassword@postgres:5432/firedb?schema=public
 
 # Email settings (update these)
 SMTP_HOST=smtp.gmail.com
@@ -87,27 +92,29 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml build
 echo "🚀 Starting containers..."
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
-# Wait for MongoDB to be ready
-echo "⏳ Waiting for MongoDB to start..."
-sleep 15
+# Wait for PostgreSQL to be ready
+echo "⏳ Waiting for PostgreSQL to start..."
+sleep 10
 
-# Only restore if database is empty (first time setup)
-echo "📦 Checking if database needs restoration..."
-DOC_COUNT=$(docker compose exec -T mongodb mongo --quiet test --eval "db.getCollectionNames().length" 2>/dev/null || echo "0")
-if [ "$DOC_COUNT" = "0" ] || [ -z "$DOC_COUNT" ]; then
-    # Find the most recent backup
-    LATEST_BACKUP=$(ls -dt /opt/fire-productions/mongo-backup/backup_* 2>/dev/null | head -1)
-    if [ -n "$LATEST_BACKUP" ] && [ -d "$LATEST_BACKUP/test" ]; then
-        echo "📦 Restoring from latest backup: $LATEST_BACKUP"
-        docker compose exec -T mongodb mongorestore --db test /backup/$(basename $LATEST_BACKUP)/test || echo "Restore failed or skipped"
-    elif [ -d "/opt/fire-productions/mongo-backup/test" ]; then
-        echo "📦 Restoring from legacy backup..."
-        docker compose exec -T mongodb mongorestore --db test /backup/test || echo "Restore failed or skipped"
-    else
-        echo "ℹ️  No backup found. Starting with empty database."
-    fi
+# Check if PostgreSQL is ready
+until docker compose exec -T postgres pg_isready -U fire -d firedb 2>/dev/null; do
+    echo "Waiting for PostgreSQL..."
+    sleep 2
+done
+echo "✅ PostgreSQL is ready!"
+
+# Run Prisma migrations
+echo "� Running database migrations..."
+docker compose exec -T server npx prisma migrate deploy || echo "Migrations skipped or already applied"
+
+# Check if we need to seed initial data
+echo "📦 Checking if database needs seeding..."
+TABLE_COUNT=$(docker compose exec -T postgres psql -U fire -d firedb -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" 2>/dev/null | tr -d ' ' || echo "0")
+
+if [ "$TABLE_COUNT" -le "1" ]; then
+    echo "ℹ️  Database is empty. You may want to seed initial data via admin dashboard."
 else
-    echo "✅ Database already has data ($DOC_COUNT collections). Skipping restore."
+    echo "✅ Database has $TABLE_COUNT tables."
 fi
 
 # Show status
@@ -125,5 +132,6 @@ echo ""
 echo "📝 Next steps:"
 echo "   1. Edit .env.production with your SMTP settings"
 echo "   2. Set up GitHub secrets for auto-deploy"
-echo "   3. (Optional) Set up SSL with Certbot"
+echo "   3. Add categories and products via admin dashboard"
+echo "   4. (Optional) Set up SSL with Certbot"
 echo ""

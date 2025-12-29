@@ -35,16 +35,20 @@ jobs:
             echo "📥 Pulling latest code..."
             git pull origin main
             
-            # Backup database BEFORE doing anything
+            # Backup PostgreSQL BEFORE doing anything
             echo "💾 Backing up database before deploy..."
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile backup run --rm mongo-backup || echo "Backup skipped (first deploy or no data)"
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile backup run --rm postgres-backup || echo "Backup skipped (first deploy or no data)"
             
-            # ONLY rebuild server and client - NEVER touch MongoDB!
+            # ONLY rebuild server and client - NEVER touch PostgreSQL!
             echo "🔨 Building server and client images..."
             docker compose -f docker-compose.yml -f docker-compose.prod.yml build server client
             
-            echo "� Restarting server and client ONLY (MongoDB stays running)..."
+            echo "🚀 Restarting server and client ONLY (PostgreSQL stays running)..."
             docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps --force-recreate server client
+            
+            # Run Prisma migrations
+            echo "📊 Running database migrations..."
+            docker compose exec -T server npx prisma migrate deploy || echo "Migrations skipped or already applied"
             
             # Clean up old images
             echo "🧹 Cleaning up..."

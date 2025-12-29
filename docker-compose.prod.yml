@@ -2,7 +2,7 @@
 
 # Production overrides
 services:
-  mongodb:
+  postgres:
     deploy:
       resources:
         limits:
@@ -22,24 +22,25 @@ services:
         limits:
           memory: 128M
 
-  # MongoDB Backup Service (runs daily at 2 AM)
-  mongo-backup:
-    image: mongo:4.4
-    container_name: fire-mongo-backup
+  # PostgreSQL Backup Service
+  postgres-backup:
+    image: postgres:15
+    container_name: fire-postgres-backup
     restart: "no"
+    environment:
+      PGPASSWORD: firepassword
     volumes:
-      - ./mongo-backup:/backup
-      - ./scripts:/scripts
+      - ./postgres-backup:/backup
     depends_on:
-      mongodb:
+      postgres:
         condition: service_healthy
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
-        echo "Running MongoDB backup..."
-        mongodump --host mongodb:27017 --db test --out /backup/backup_$$(date +%Y%m%d_%H%M%S)
+        echo "Running PostgreSQL backup..."
+        pg_dump -h postgres -U fire -d firedb -F c -f /backup/backup_$$(date +%Y%m%d_%H%M%S).dump
         echo "Cleaning old backups (keeping last 7 days)..."
-        find /backup -maxdepth 1 -type d -name "backup_*" -mtime +7 -exec rm -rf {} \;
+        find /backup -maxdepth 1 -type f -name "backup_*.dump" -mtime +7 -exec rm -f {} \;
         echo "Backup complete!"
     networks:
       - fire-network

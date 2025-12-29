@@ -1,4 +1,4 @@
-name: MongoDB Backup
+name: PostgreSQL Backup
 
 on:
   schedule:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   backup:
-    name: Run MongoDB Backup
+    name: Run PostgreSQL Backup
     runs-on: ubuntu-latest
     environment: VPS_HOST
     
@@ -23,10 +23,10 @@ jobs:
           script: |
             cd /opt/fire-productions
             
-            echo "🔄 Running MongoDB backup..."
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile backup run --rm mongo-backup
+            echo "🔄 Running PostgreSQL backup..."
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile backup run --rm postgres-backup
             
             echo "📦 Current backups:"
-            ls -la mongo-backup/ | grep backup_ | tail -10
+            ls -lah postgres-backup/ | grep backup_ | tail -10
             
             echo "✅ Backup complete!"
