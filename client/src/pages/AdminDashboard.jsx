@@ -450,7 +450,7 @@ function EditProductButton({ item, token, onSaved }) {
               className={cx(inputWithIcon, "appearance-none")}
             >
               <option value="">Select category</option>
-              {cats.filter((c) => !c.parent).map((c) => (
+              {cats.filter((c) => !c.parentId).map((c) => (
                 <option key={c.id} value={c.name}>{c.name}</option>
               ))}
             </select>
@@ -466,8 +466,8 @@ function EditProductButton({ item, token, onSaved }) {
               <option value="">None</option>
               {cats
                 .filter((c) => {
-                  const parent = cats.find((p) => !p.parent && p.name === form.category);
-                  return parent && String(c.parent) === String(parent.id);
+                  const parent = cats.find((p) => !p.parentId && p.name === form.category);
+                  return parent && String(c.parentId) === String(parent.id);
                 })
                 .map((c) => (
                   <option key={c.id} value={c.name}>{c.name}</option>
@@ -1012,7 +1012,7 @@ function AddProduct({ token }) {
             required
           >
             <option value="">Select category</option>
-            {cats.filter((c) => !c.parent).map((c) => (
+            {cats.filter((c) => !c.parentId).map((c) => (
               <option key={c.id} value={c.name}>{c.name}</option>
             ))}
           </select>
@@ -1028,8 +1028,8 @@ function AddProduct({ token }) {
             <option value="">None</option>
             {cats
               .filter((c) => {
-                const parent = cats.find((p) => !p.parent && p.name === form.category);
-                return parent && String(c.parent) === String(parent.id);
+                const parent = cats.find((p) => !p.parentId && p.name === form.category);
+                return parent && String(c.parentId) === String(parent.id);
               })
               .map((c) => (
                 <option key={c.id} value={c.name}>{c.name}</option>
@@ -1716,8 +1716,8 @@ function ManageCategories({ token }) {
   const [newCat, setNewCat] = useState("");
   const [newSub, setNewSub] = useState({ parent: "", name: "" });
 
-  const parents = cats.filter((c) => !c.parent);
-  const childrenByParent = (parentId) => cats.filter((c) => String(c.parent) === String(parentId));
+  const parents = cats.filter((c) => !c.parentId);
+  const childrenByParent = (parentId) => cats.filter((c) => String(c.parentId) === String(parentId));
 
   const addCategory = async (e) => {
     e.preventDefault();
