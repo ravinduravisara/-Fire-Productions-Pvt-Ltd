@@ -12,6 +12,7 @@ export default function Home() {
         path="/"
         jsonLd={organizationJsonLd({
           siteUrl: import.meta.env.VITE_SITE_URL,
+          logoPath: '/logo.png',
           sameAs: [
             'https://www.facebook.com/profile.php?id=61585614113109',
             'https://youtube.com/@firemusicproductionsl?si=B24zsbyhqts2XTYE',
