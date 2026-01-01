@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Sparkles, Music2, Video, Mic2, PartyPopper, X, ArrowRight } from "lucide-react";
 import SectionTitle from "../components/ui/SectionTitle";
@@ -22,34 +22,56 @@ const FALLBACK_SERVICES = [
     title: "Fire Acoustic", 
     tag: "Acoustic", 
     desc: "Premium acoustic sound, live audio capture, and room-tuned mixes that feel real.", 
-    icon: Mic2 
+    icon: Mic2,
+    order: 2
   },
   { 
     key: "music", 
     title: "Fire Music", 
     tag: "Music", 
     desc: "Original music, mixing, and mastering engineered for streaming and brand identity.", 
-    icon: Music2 
+    icon: Music2,
+    order: 1
   },
   { 
     key: "films", 
     title: "Fire Films", 
     tag: "Films", 
     desc: "Cinematic filming, color grading, and edits designed to hold attention.", 
-    icon: Video 
+    icon: Video,
+    order: 4
   },
   { 
     key: "entertainment", 
     title: "Fire Entertainment", 
     tag: "Entertainment", 
     desc: "Creative show concepts and immersive experiences built for maximum impact.", 
-    icon: PartyPopper 
+    icon: PartyPopper,
+    order: 3
   },
 ];
 
 // Derive API origin for resolving relative image URLs
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const API_ORIGIN = API_BASE.replace(/\/api\/?$/, '');
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+const readCache = (key) => {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || typeof obj !== 'object') return null;
+    if (!obj.ts || (Date.now() - obj.ts) > CACHE_TTL_MS) return null;
+    return obj.data || null;
+  } catch { return null; }
+};
+
+const writeCache = (key, data) => {
+  try {
+    sessionStorage.setItem(key, JSON.stringify({ ts: Date.now(), data }));
+  } catch {}
+};
 
 const resolveImageUrl = (url) => {
   if (!url) return null;
@@ -74,9 +96,12 @@ function SkeletonCard() {
 export default function Services() {
   const [selected, setSelected] = useState(null);
   const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [services, setServices] = useState(FALLBACK_SERVICES);
+  const [loading, setLoading] = useState(true); // works loading
+  const [servicesLoading, setServicesLoading] = useState(true);
+  const [services, setServices] = useState([]);
   const shouldReduceMotion = useReducedMotion();
+  const initRef = useRef(false);
+  const prefetchedRef = useRef(new Set());
 
   // Helper: map a DB service into UI card format
   const mapDbService = (s) => {
@@ -109,36 +134,106 @@ export default function Services() {
       tag, 
       desc: s.description || '', 
       icon,
-      logo: customLogo // Attach the logo path if found
+      logo: customLogo, // Attach the logo path if found
+      order: Number.isFinite(s.order) ? s.order : undefined
     };
   };
 
   // Merge DB services with fallback so defaults stay visible
   const mergeServices = (dbList) => {
     const mapped = Array.isArray(dbList) ? dbList.map(mapDbService) : [];
-    // If DB has services, use them only (no fallback to avoid duplicates)
-    if (mapped.length > 0) return mapped;
-    // Otherwise, show defaults with configured logos
-    return FALLBACK_SERVICES.map((svc) => ({ ...svc, logo: LOGO_ASSETS[svc.key] }));
+    const byOrder = (a, b) => {
+      const ao = Number.isFinite(a?.order) ? a.order : Number.MAX_SAFE_INTEGER;
+      const bo = Number.isFinite(b?.order) ? b.order : Number.MAX_SAFE_INTEGER;
+      return ao - bo;
+    };
+    // If DB has services, use them only (sorted by admin-defined order)
+    if (mapped.length > 0) return mapped.slice().sort(byOrder);
+    // Otherwise, show defaults with configured logos, sorted by default order
+    return FALLBACK_SERVICES.map((svc) => ({ ...svc, logo: LOGO_ASSETS[svc.key] })).sort(byOrder);
   };
 
   useEffect(() => {
+    if (initRef.current) return; // guard StrictMode in dev
+    initRef.current = true;
     (async () => {
       try {
-        const data = await getWorks();
-        setItems(Array.isArray(data) ? data : []);
-        // Load services and merge with fallback
-        try {
-          const svc = await listServices();
+        // Stale-while-revalidate: hydrate from cache immediately if available
+        const cachedServices = readCache('servicesCache');
+        const cachedWorks = readCache('worksCache');
+        const hadCache = Array.isArray(cachedWorks) || Array.isArray(cachedServices);
+        if (Array.isArray(cachedServices)) {
+          setServices(mergeServices(cachedServices));
+          setServicesLoading(false);
+        }
+        if (Array.isArray(cachedWorks)) {
+          setItems(cachedWorks);
+          setLoading(false);
+        }
+
+        // Fetch fresh data in background
+        if (!hadCache) {
+          setServicesLoading(true);
+          setLoading(true);
+        }
+        const [svc, data] = await Promise.all([
+          listServices().catch(() => []),
+          getWorks().catch(() => []),
+        ]);
+        if (Array.isArray(svc)) {
+          writeCache('servicesCache', svc);
           setServices(mergeServices(svc));
-        } catch {}
+        }
+        if (Array.isArray(data)) {
+          writeCache('worksCache', data);
+          setItems(data);
+        }
       } catch (e) {
-        console.error("Failed to load works", e);
+        console.error("Failed to load data", e);
       } finally {
+        setServicesLoading(false);
         setLoading(false);
       }
     })();
   }, []);
+
+  // Prefetch images for a service tag on hover/click to warm cache
+  const imageSrcsForWork = (w) => {
+    const list = Array.isArray(w.imageUrls) && w.imageUrls.length
+      ? w.imageUrls
+      : [w.imageUrl || w.image || w.url].filter(Boolean);
+    return list.map((raw) => (String(raw).startsWith('http') ? raw : `${API_ORIGIN}${raw}`));
+  };
+
+  const prefetchForTag = (tag) => {
+    try {
+      if (!tag || prefetchedRef.current.has(tag)) return;
+      const pool = items.filter((w) => (w.tags || []).includes(tag) || (w.category || '') === tag)
+                        .flatMap(imageSrcsForWork)
+                        .slice(0, 12);
+      pool.forEach((src) => {
+        const img = new Image();
+        try {
+          img.loading = 'eager';
+          img.decoding = 'async';
+        } catch {}
+        img.src = src;
+      });
+      prefetchedRef.current.add(tag);
+    } catch {}
+  };
+
+  // Prefetch all service tags once items are available, on idle
+  useEffect(() => {
+    if (!items.length || !services.length) return;
+    const tags = Array.from(new Set(services.map((s) => s.tag).filter(Boolean)));
+    const schedule = typeof window.requestIdleCallback === 'function'
+      ? window.requestIdleCallback
+      : (fn) => setTimeout(fn, 300);
+    schedule(() => {
+      try { tags.forEach((t) => prefetchForTag(t)); } catch {}
+    });
+  }, [items, services]);
 
   // Live refresh when services are updated from admin
   useEffect(() => {
@@ -205,14 +300,21 @@ export default function Services() {
             />
           </motion.div>
 
-          {/* Services grid */}
+          {/* Services grid (uses skeleton while loading to avoid reflow) */}
           <motion.div
             variants={wrap}
             initial="hidden"
             animate="show"
             className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
           >
-            {services.map((s) => {
+                {servicesLoading ? (
+                  <>
+                    <SkeletonCard />
+                    <SkeletonCard />
+                    <SkeletonCard />
+                    <SkeletonCard />
+                  </>
+                ) : services.map((s) => {
               const active = selected === s.key;
               const Icon = s.icon;
               const hasLogo = !!s.logo;
@@ -223,13 +325,14 @@ export default function Services() {
                   variants={item}
                   type="button"
                   onClick={() => toggle(s.key)}
+                  onMouseEnter={() => prefetchForTag(s.tag)}
                   onKeyDown={(e) => (e.key === "Enter" ? toggle(s.key) : null)}
                   aria-pressed={active}
                   className={[
                     "group relative w-full rounded-2xl border p-5 text-left",
-                    "transition will-change-transform",
+                    "transition",
                     "bg-card/40 backdrop-blur-xl",
-                    "hover:-translate-y-1 hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/40",
+                    "hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/40",
                     "focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600/60",
                     active
                       ? "border-brand-600/60 ring-1 ring-brand-600/25"
@@ -256,6 +359,8 @@ export default function Services() {
                         <img 
                           src={s.logo} 
                           alt={`${s.title} Logo`}
+                          loading="lazy"
+                          decoding="async"
                           className="absolute inset-0 h-full w-full object-contain p-1.5"
                           onError={(e) => { try { e.currentTarget.style.display = 'none' } catch {} }}
                         />
@@ -306,55 +411,49 @@ export default function Services() {
           </motion.div>
 
           {/* Selected projects panel */}
-          <AnimatePresence mode="wait">
-            {selectedService && (
-              <motion.div
-                key={selectedService.key}
-                initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 10, filter: "blur(6px)" }}
-                animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 10, filter: "blur(6px)" }}
-                transition={shouldReduceMotion ? { duration: 0.01 } : { duration: 0.35 }}
-                className="mt-12"
-              >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <SectionTitle title={`${selectedService.title} Projects`} />
-                    <p className="mt-2 text-sm text-muted">
-                      Showing projects tagged as <span className="text-text font-semibold">{selectedService.tag}</span>
-                    </p>
+          {selectedService && (
+            <div className="mt-12">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <SectionTitle title={`${selectedService.title} Projects`} />
+                  <p className="mt-2 text-sm text-muted">
+                    Showing projects tagged as <span className="text-text font-semibold">{selectedService.tag}</span>
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSelected(null)}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-border/60 bg-card/40 px-4 py-2 text-sm font-semibold text-text backdrop-blur transition hover:bg-card/60 hover:border-brand-600/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600/60"
+                >
+                  <X className="h-4 w-4" />
+                  Clear selection
+                </button>
+              </div>
+
+              <div className="mt-6 rounded-2xl border border-border/60 bg-card/30 p-4 backdrop-blur-xl sm:p-6 min-h-[360px]">
+                {items.length === 0 ? (
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    <SkeletonCard />
+                    <SkeletonCard />
+                    <SkeletonCard />
+                    <SkeletonCard />
+                    <SkeletonCard />
+                    <SkeletonCard />
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelected(null)}
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-border/60 bg-card/40 px-4 py-2 text-sm font-semibold text-text backdrop-blur transition hover:bg-card/60 hover:border-brand-600/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600/60"
-                  >
-                    <X className="h-4 w-4" />
-                    Clear selection
-                  </button>
-                </div>
-
-                <div className="mt-6 rounded-2xl border border-border/60 bg-card/30 p-4 backdrop-blur-xl sm:p-6">
-                  {loading ? (
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                      <SkeletonCard />
-                      <SkeletonCard />
-                      <SkeletonCard />
-                    </div>
-                  ) : (
-                    <>
-                      <FireCards items={filtered} />
-                      {filtered.length === 0 && (
-                        <p className="mt-4 text-sm text-muted">
-                          No projects found for this service yet.
-                        </p>
-                      )}
-                    </>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                ) : (
+                  <>
+                    <FireCards items={filtered} />
+                    {filtered.length === 0 && (
+                      <p className="mt-4 text-sm text-muted">
+                        No projects found for this service yet.
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </motion.div>
       </div>
     </section>

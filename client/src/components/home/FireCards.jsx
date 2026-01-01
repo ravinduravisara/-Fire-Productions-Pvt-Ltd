@@ -1,5 +1,27 @@
 import { useState } from 'react'
 
+function LazyImage({ src, alt, aspect = 'video', mode = 'contain' }) {
+  const [loaded, setLoaded] = useState(false)
+  const aspectClass = aspect === 'video' ? 'aspect-video' : 'aspect-[4/3]'
+  const objectClass = mode === 'cover' ? 'object-cover' : 'object-contain'
+
+  return (
+    <div className={`relative ${aspectClass} bg-surface`}>
+      {!loaded ? <div className="absolute inset-0 animate-pulse bg-surface" /> : null}
+      {src ? (
+        <img
+          src={src}
+          alt={alt}
+          loading="lazy"
+          decoding="async"
+          onLoad={() => setLoaded(true)}
+          className={`absolute inset-0 h-full w-full ${objectClass}`}
+        />
+      ) : null}
+    </div>
+  )
+}
+
 function WorkPreviewModal({ open, item, index, onClose, onSetIndex }) {
   if (!open || !item) return null
 
@@ -26,10 +48,11 @@ function WorkPreviewModal({ open, item, index, onClose, onSetIndex }) {
           <div className="grid grid-cols-1 md:grid-cols-2">
             <div className="relative bg-background">
               {images.length ? (
-                <img
+                <LazyImage
                   src={images[Math.min(index, images.length - 1)]}
                   alt={item.title || 'preview'}
-                  className="aspect-[4/3] w-full object-contain"
+                  aspect="4/3"
+                  mode="contain"
                 />
               ) : (
                 <div className="aspect-[4/3]" />
@@ -70,7 +93,7 @@ function WorkPreviewModal({ open, item, index, onClose, onSetIndex }) {
                         ].join(' ')}
                         aria-label={`Show image ${i + 1}`}
                       >
-                        <img src={src} alt="thumb" className="h-full w-full object-contain bg-background" />
+                        <img src={src} alt="thumb" loading="lazy" decoding="async" className="h-full w-full object-contain bg-background" />
                       </button>
                     ))}
                   </div>
@@ -131,12 +154,8 @@ function ImageCarousel({ images = [], base = '' }) {
   const src = raw ? (String(raw).startsWith('http') ? raw : `${base}${raw}`) : ''
 
   return (
-    <div className="relative aspect-video bg-surface">
-      {src ? (
-        <img src={src} alt="project" className="absolute inset-0 h-full w-full object-contain" />
-      ) : (
-        <div className="absolute inset-0" />
-      )}
+    <div className="relative">
+      <LazyImage src={src} alt="project" aspect="video" mode="contain" />
 
       {images.length > 1 ? (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-between px-2">
@@ -196,8 +215,8 @@ export default function FireCards({ items = [] }) {
         const Wrapper = isLink ? 'a' : 'div'
         const shouldPreview = ['Acoustic', 'Entertainment'].includes(w.category)
         const wrapperProps = isLink ? { href: w.link, target: '_blank', rel: 'noreferrer' } : {}
-        // Ensure a unique, stable id even if backend id/title is missing/duplicated
-        const cardId = w.id || w._id || `work-${idx}`
+        // Stable key derived from item identity; avoid index
+        const cardId = w.id || w._id || `${String(w.title||'work').toLowerCase()}-${String(w.createdAt||w.imageUrl||w.url||idx)}`
         const isExpanded = cardId ? expandedIds.has(cardId) : false
 
         return (
@@ -225,11 +244,7 @@ export default function FireCards({ items = [] }) {
               const raw = list[0] || ''
               const imageSrc = raw ? (String(raw).startsWith('http') ? raw : `${filesBase}${raw}`) : ''
               return (
-                <div className="relative aspect-video bg-surface">
-                  {imageSrc ? (
-                    <img src={imageSrc} alt="project" className="absolute inset-0 h-full w-full object-contain" />
-                  ) : null}
-                </div>
+                <LazyImage src={imageSrc} alt="project" aspect="video" mode="contain" />
               )
             }
 
@@ -247,7 +262,7 @@ export default function FireCards({ items = [] }) {
                   const src = String(raw).startsWith('http') ? raw : `${filesBase}${raw}`
                   return (
                     <div key={raw + idx} className="relative pt-[56%] bg-surface">
-                      <img src={src} alt="project" className="absolute inset-0 h-full w-full object-cover" />
+                      <img src={src} alt="project" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
                     </div>
                   )
                 })}

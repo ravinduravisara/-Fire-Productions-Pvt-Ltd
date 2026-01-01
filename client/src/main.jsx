@@ -6,9 +6,7 @@ import './styles/globals.css'
 
 const root = document.getElementById('root')
 createRoot(root).render(
-  <React.StrictMode>
-    <HelmetProvider>
-      <App />
-    </HelmetProvider>
-  </React.StrictMode>
+  <HelmetProvider>
+    <App />
+  </HelmetProvider>
 )
