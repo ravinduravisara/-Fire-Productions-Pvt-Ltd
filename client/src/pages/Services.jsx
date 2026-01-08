@@ -102,6 +102,7 @@ export default function Services() {
   const shouldReduceMotion = useReducedMotion();
   const initRef = useRef(false);
   const prefetchedRef = useRef(new Set());
+  const panelRef = useRef(null);
 
   // Helper: map a DB service into UI card format
   const mapDbService = (s) => {
@@ -279,6 +280,17 @@ export default function Services() {
       : { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.55 } },
   };
 
+  // When a service is selected, scroll the projects panel into view.
+  useEffect(() => {
+    if (!selectedService || !panelRef.current) return;
+    try {
+      const rect = panelRef.current.getBoundingClientRect();
+      const offset = 80; // account for navbar height
+      const top = rect.top + window.scrollY - offset;
+      window.scrollTo({ top, behavior: shouldReduceMotion ? 'auto' : 'smooth' });
+    } catch {}
+  }, [selectedService, shouldReduceMotion]);
+
   return (
     <section className="relative py-16 sm:py-20">
       <SEO
@@ -412,7 +424,7 @@ export default function Services() {
 
           {/* Selected projects panel */}
           {selectedService && (
-            <div className="mt-12">
+            <div className="mt-12" ref={panelRef}>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <SectionTitle title={`${selectedService.title} Projects`} />
