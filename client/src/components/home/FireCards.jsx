@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 function LazyImage({ src, alt, aspect = 'video', mode = 'contain' }) {
   const [loaded, setLoaded] = useState(false)
@@ -185,6 +186,7 @@ function ImageCarousel({ images = [], base = '' }) {
 }
 
 export default function FireCards({ items = [] }) {
+  const navigate = useNavigate()
   const [expandedIds, setExpandedIds] = useState(() => new Set())
   const [previewItem, setPreviewItem] = useState(null)
   const [previewIndex, setPreviewIndex] = useState(0)
@@ -243,6 +245,11 @@ export default function FireCards({ items = [] }) {
                 if (!shouldPreview) return
                 e.preventDefault()
                 e.stopPropagation()
+                const targetId = w.id || w._id
+                if (targetId) {
+                  navigate(`/works/${targetId}`)
+                  return
+                }
                 const y = e.nativeEvent?.clientY ?? e.clientY
                 if (typeof y === 'number') setPreviewOffsetTop(y)
                 setPreviewItem(w)
@@ -262,6 +269,11 @@ export default function FireCards({ items = [] }) {
               const handlePreview = (e) => {
                 e.preventDefault()
                 e.stopPropagation()
+                const targetId = w.id || w._id
+                if (targetId) {
+                  navigate(`/works/${targetId}`)
+                  return
+                }
                 const y = e.nativeEvent?.clientY ?? e.clientY
                 if (typeof y === 'number') setPreviewOffsetTop(y)
                 setPreviewItem(w)

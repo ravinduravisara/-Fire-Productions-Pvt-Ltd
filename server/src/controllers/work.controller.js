@@ -7,7 +7,20 @@ export const listWorks = asyncHandler(async (req, res) => {
     return res.status(503).json({ message: 'DB not connected' })
   }
   const works = await prisma.work.findMany({ orderBy: { createdAt: 'desc' } })
+  try { res.set('Cache-Control', 'public, max-age=60') } catch {}
   res.json(works)
+})
+
+export const getWorkById = asyncHandler(async (req, res) => {
+  if (!isConnected()) {
+    return res.status(503).json({ message: 'DB not connected' })
+  }
+  const { id } = req.params
+  if (!id) return res.status(400).json({ message: 'id is required' })
+  const work = await prisma.work.findUnique({ where: { id } })
+  if (!work) return res.status(404).json({ message: 'Not found' })
+  try { res.set('Cache-Control', 'public, max-age=120') } catch {}
+  res.json(work)
 })
 
 export const createWork = asyncHandler(async (req, res) => {

@@ -7,6 +7,7 @@ import Contact from '../pages/Contact.jsx'
 import AdminLogin from '../pages/AdminLogin.jsx'
 import AdminDashboard from '../pages/AdminDashboard.jsx'
 import useScrollToTop from '../hooks/useScrollToTop.js'
+import WorkDetail from '../pages/WorkDetail.jsx'
 
 export default function AppRoutes() {
   useScrollToTop()
@@ -19,6 +20,7 @@ export default function AppRoutes() {
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/contact" element={<Contact />} />
+      <Route path="/works/:id" element={<WorkDetail />} />
     </Routes>
   )
 }

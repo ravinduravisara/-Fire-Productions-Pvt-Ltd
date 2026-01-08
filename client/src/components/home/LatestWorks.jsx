@@ -18,10 +18,16 @@ export default function LatestWorks() {
   useEffect(() => {
     (async () => {
       try {
+        // Try read cache first for instant render
+        const cached = sessionStorage.getItem('worksCache')
+        if (cached) {
+          try { setItems(JSON.parse(cached) || []) } catch {}
+        }
         const data = await getWorks()
         const list = Array.isArray(data) ? data : []
-        // API returns in desc `createdAt`; keep as-is for per-group latest selection
         setItems(list)
+        // Write cache for subsequent visits
+        try { sessionStorage.setItem('worksCache', JSON.stringify(list)) } catch {}
       } catch (e) {
         console.error('Failed to fetch works', e)
       } finally {

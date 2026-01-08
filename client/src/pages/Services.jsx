@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Sparkles, Music2, Video, Mic2, PartyPopper, X, ArrowRight } from "lucide-react";
 import SectionTitle from "../components/ui/SectionTitle";
@@ -94,6 +95,7 @@ function SkeletonCard() {
 }
 
 export default function Services() {
+  const location = useLocation();
   const [selected, setSelected] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true); // works loading
@@ -197,6 +199,21 @@ export default function Services() {
       }
     })();
   }, []);
+
+  // Auto-select a service based on URL hash (e.g., #acoustic)
+  useEffect(() => {
+    const hash = String(location.hash || '').replace('#', '').toLowerCase();
+    if (!hash || !services.length) return;
+    // Find by tag mapping rather than DB key to be robust
+    const tag = hash === 'acoustic' ? 'Acoustic'
+               : hash === 'music' ? 'Music'
+               : hash === 'films' ? 'Films'
+               : hash === 'entertainment' ? 'Entertainment'
+               : '';
+    if (!tag) return;
+    const svc = services.find((s) => String(s.tag) === tag);
+    if (svc) setSelected(svc.key);
+  }, [location.hash, services]);
 
   // Prefetch images for a service tag on hover/click to warm cache
   const imageSrcsForWork = (w) => {
