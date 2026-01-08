@@ -60,9 +60,14 @@ export default function LatestWorks() {
   // After items render, auto-scroll to the previously clicked card (if any)
   useEffect(() => {
     if (didAutoScroll || loading) return
-    let workId
-    try { workId = sessionStorage.getItem('returnToWorkId') } catch {}
-    if (!workId) return
+    let workId, src, tag
+    try {
+      workId = sessionStorage.getItem('returnToWorkId')
+      src = sessionStorage.getItem('returnToSource')
+      tag = sessionStorage.getItem('returnToServiceTag')
+    } catch {}
+    // Only auto-scroll for Home origin and Fire Entertainment
+    if (!workId || src !== 'home' || tag !== 'Entertainment') return
 
     let attempts = 0
     const maxAttempts = 30 // ~500ms at 60fps
@@ -72,6 +77,7 @@ export default function LatestWorks() {
         try { sessionStorage.removeItem('returnToWorkId') } catch {}
         try { sessionStorage.removeItem('returnToSource') } catch {}
         try { sessionStorage.removeItem('returnToTime') } catch {}
+        try { sessionStorage.removeItem('returnToServiceTag') } catch {}
         setDidAutoScroll(true)
         el.scrollIntoView({ behavior: 'smooth', block: 'center' })
         return
@@ -80,8 +86,16 @@ export default function LatestWorks() {
       if (attempts < maxAttempts) {
         requestAnimationFrame(scrollToCard)
       } else {
-        // Give up and clear the marker to avoid repeated tries
+        // Fallback: scroll to Fire Entertainment section if card not in latest 3
+        const groupEl = document.getElementById('group-entertainment')
+        if (groupEl) {
+          const rect = groupEl.getBoundingClientRect()
+          const top = rect.top + window.scrollY - 80
+          window.scrollTo({ top, behavior: 'smooth' })
+        }
         try { sessionStorage.removeItem('returnToWorkId') } catch {}
+        try { sessionStorage.removeItem('returnToSource') } catch {}
+        try { sessionStorage.removeItem('returnToServiceTag') } catch {}
       }
     }
 
@@ -108,7 +122,7 @@ export default function LatestWorks() {
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-12">
             {groups.map((g) => (
-              <div key={g.key}>
+              <div key={g.key} id={`group-${g.key}`}>
                 <h3 className="text-lg font-semibold text-text">{g.title}</h3>
                 {g.items.length ? (
                   <div className="mt-4">

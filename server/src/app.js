@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import compression from 'compression'
 import { notFound } from './middleware/notFound.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import workRoutes from './routes/work.routes.js'
@@ -15,6 +16,7 @@ import path from 'path'
 const app = express()
 
 app.use(cors())
+app.use(compression())
 app.use(express.json())
 
 // Serve uploaded files statically

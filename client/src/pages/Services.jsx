@@ -106,6 +106,7 @@ export default function Services() {
   const prefetchedRef = useRef(new Set());
   const panelRef = useRef(null);
   const returnWorkIdRef = useRef(null);
+  const suppressPanelScrollRef = useRef(false);
 
   // Helper: map a DB service into UI card format
   const mapDbService = (s) => {
@@ -303,6 +304,7 @@ export default function Services() {
     if (!selectedService || !panelRef.current) return;
     try {
       // Skip generic panel scroll when returning to a specific card from Services (Acoustic/Entertainment)
+      if (suppressPanelScrollRef.current || sessionStorage.getItem('suppressPanelScroll') === '1') return;
       const src = sessionStorage.getItem('returnToSource');
       const wid = sessionStorage.getItem('returnToWorkId');
       let tag = sessionStorage.getItem('returnToServiceTag');
@@ -346,6 +348,9 @@ export default function Services() {
       if (w) svcTag = (Array.isArray(w.tags) && w.tags.find(Boolean)) || w.category || '';
     }
     if (!allowed.includes(String(svcTag))) return;
+    // Suppress generic panel scroll during targeted scroll
+    try { sessionStorage.setItem('suppressPanelScroll', '1'); } catch {}
+    suppressPanelScrollRef.current = true;
 
     // Ensure correct service is selected first
     if (svcKey && selected !== svcKey) {
@@ -377,6 +382,11 @@ export default function Services() {
         try { sessionStorage.removeItem('returnToServiceTag'); } catch {}
         returnWorkIdRef.current = null;
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Re-enable generic panel scroll after targeted scroll completes
+        setTimeout(() => {
+          suppressPanelScrollRef.current = false;
+          try { sessionStorage.removeItem('suppressPanelScroll'); } catch {}
+        }, 600);
         return;
       }
       tries += 1;
@@ -385,6 +395,8 @@ export default function Services() {
         // give up and clear markers
         try { sessionStorage.removeItem('returnToWorkId'); } catch {}
         try { sessionStorage.removeItem('returnToSource'); } catch {}
+        suppressPanelScrollRef.current = false;
+        try { sessionStorage.removeItem('suppressPanelScroll'); } catch {}
       }
     };
     setTimeout(() => requestAnimationFrame(tick), 40);

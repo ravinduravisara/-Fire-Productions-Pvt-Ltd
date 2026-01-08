@@ -190,6 +190,7 @@ export default function FireCards({ items = [], serviceKey, serviceTag }) {
   const location = useLocation()
   const [expandedIds, setExpandedIds] = useState(() => new Set())
     const isFromServices = location.pathname.startsWith('/services')
+    const isFromHome = location.pathname === '/'
     const isReturnable = ['Acoustic', 'Entertainment'].includes(String(serviceTag))
   const [previewItem, setPreviewItem] = useState(null)
   const [previewIndex, setPreviewIndex] = useState(0)
@@ -255,12 +256,21 @@ export default function FireCards({ items = [], serviceKey, serviceTag }) {
                 const targetId = w.id || w._id
                 if (targetId) {
                   try {
+                    // Mark return context for Services (Acoustic/Entertainment)
                     if (isFromServices && isReturnable) {
                       sessionStorage.setItem('returnToWorkId', String(targetId))
                       sessionStorage.setItem('returnToSource', 'services')
                       sessionStorage.setItem('returnToTime', String(Date.now()))
                       if (serviceKey) sessionStorage.setItem('returnToServiceKey', String(serviceKey))
                       if (serviceTag) sessionStorage.setItem('returnToServiceTag', String(serviceTag))
+                    }
+                    // Mark return context for Home Latest Works (Fire Entertainment only)
+                    const isEntertainmentItem = categoryLc === 'entertainment' || hasTagEntertainment
+                    if (isFromHome && isEntertainmentItem) {
+                      sessionStorage.setItem('returnToWorkId', String(targetId))
+                      sessionStorage.setItem('returnToSource', 'home')
+                      sessionStorage.setItem('returnToServiceTag', 'Entertainment')
+                      sessionStorage.setItem('returnToTime', String(Date.now()))
                     }
                   } catch {}
                   navigate(`/works/${targetId}`)
@@ -288,12 +298,21 @@ export default function FireCards({ items = [], serviceKey, serviceTag }) {
                 const targetId = w.id || w._id
                 if (targetId) {
                   try {
+                    // Mark return context for Services (Acoustic/Entertainment)
                     if (isFromServices && isReturnable) {
                       sessionStorage.setItem('returnToWorkId', String(targetId))
                       sessionStorage.setItem('returnToSource', 'services')
                       sessionStorage.setItem('returnToTime', String(Date.now()))
                       if (serviceKey) sessionStorage.setItem('returnToServiceKey', String(serviceKey))
                       if (serviceTag) sessionStorage.setItem('returnToServiceTag', String(serviceTag))
+                    }
+                    // Mark return context for Home Latest Works (Fire Entertainment only)
+                    const isEntertainmentItem = categoryLc === 'entertainment' || hasTagEntertainment
+                    if (isFromHome && isEntertainmentItem) {
+                      sessionStorage.setItem('returnToWorkId', String(targetId))
+                      sessionStorage.setItem('returnToSource', 'home')
+                      sessionStorage.setItem('returnToServiceTag', 'Entertainment')
+                      sessionStorage.setItem('returnToTime', String(Date.now()))
                     }
                   } catch {}
                   navigate(`/works/${targetId}`)
