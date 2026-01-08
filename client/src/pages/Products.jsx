@@ -703,7 +703,7 @@ export default function Products() {
                 className="w-full appearance-none rounded-2xl border border-border/60 bg-background/30 py-3 pl-10 pr-9 text-sm text-text outline-none transition focus:border-brand-600/40 focus:ring-2 focus:ring-brand-600/20"
               >
                 <option value="">All categories</option>
-                {cats.filter((c) => !c.parent).map((c) => (
+                {cats.filter((c) => !c.parentId).map((c) => (
                   <option key={c.id} value={c.name}>{c.name}</option>
                 ))}
               </select>
@@ -723,8 +723,8 @@ export default function Products() {
                 <option value="">All subcategories</option>
                 {cats
                   .filter((c) => {
-                    const parent = cats.find((p) => !p.parent && p.name === category);
-                    return parent && String(c.parent) === String(parent.id);
+                    const parent = cats.find((p) => !p.parentId && p.name === category);
+                    return parent && String(c.parentId) === String(parent.id);
                   })
                   .map((c) => (
                     <option key={c.id} value={c.name}>{c.name}</option>

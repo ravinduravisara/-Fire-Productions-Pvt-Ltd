@@ -56,6 +56,12 @@ const DEFAULT_SERVICES = [
   { name: "Fire Entertainment", category: "Entertainment", description: "Immersive show concepts and experiences." },
 ];
 
+// Max images per project based on category
+function getMaxWorkImagesForCategory(cat) {
+  const c = String(cat || '').toLowerCase();
+  return (c === 'acoustic' || c === 'entertainment') ? 20 : 6;
+}
+
 const productCategories = [
   { value: 'Acoustic Panels', label: 'Acoustic Panels' },
   { value: 'Rockwool and Glasswool', label: 'Rockwool and Glasswool' },
@@ -693,6 +699,7 @@ function EditWorkButton({ item, token, onSaved }) {
   const [form, setForm] = useState({
     title: item.title,
     link: item.link || "",
+    description: item.description || "",
     imageUrl: item.imageUrl || "",
     imageUrls: Array.isArray(item.imageUrls) && item.imageUrls.length
       ? item.imageUrls
@@ -700,6 +707,8 @@ function EditWorkButton({ item, token, onSaved }) {
     category: item.category || "Acoustic",
     tags: (item.tags || []).join(", "),
   });
+
+  const maxImages = getMaxWorkImagesForCategory(form.category);
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -749,7 +758,7 @@ function EditWorkButton({ item, token, onSaved }) {
         open={open}
         onClose={() => setOpen(false)}
         title="Edit Project"
-        subtitle="Update title, images (up to 6), category, tags, and link"
+        subtitle={`Update title, images (up to ${maxImages}), category, tags, and link`}
         icon={Film}
       >
         <form onSubmit={onSubmit} className="space-y-4">
@@ -782,6 +791,17 @@ function EditWorkButton({ item, token, onSaved }) {
             />
           </Field>
 
+          <Field label="Description" icon={Tags}>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={onChange}
+              className={cx(inputWithIcon, "resize-none")}
+              rows={3}
+              placeholder="Short description about the project"
+            />
+          </Field>
+
           <Field label="Tags (comma separated)" icon={Tags}>
             <input
               name="tags"
@@ -792,7 +812,7 @@ function EditWorkButton({ item, token, onSaved }) {
             />
           </Field>
 
-          <Field label="Images (up to 6)">
+          <Field label={`Images (up to ${maxImages})`}>
             <input
               type="file"
               accept="image/*"
@@ -804,7 +824,7 @@ function EditWorkButton({ item, token, onSaved }) {
                 setError("");
                 try {
                   const urls = [];
-                  const remaining = 6 - (form.imageUrls?.length || 0);
+                  const remaining = maxImages - (form.imageUrls?.length || 0);
                   for (const file of files.slice(0, remaining)) {
                     const { url } = await uploadImage(file, token);
                     urls.push(url);
@@ -812,8 +832,11 @@ function EditWorkButton({ item, token, onSaved }) {
                   setForm((f) => ({
                     ...f,
                     imageUrl: f.imageUrl || urls[0] || "",
-                    imageUrls: [...(f.imageUrls || []), ...urls].slice(0, 6),
+                    imageUrls: [...(f.imageUrls || []), ...urls].slice(0, maxImages),
                   }));
+                  if (files.length > remaining) {
+                    setError(`You can upload up to ${maxImages} images for ${form.category}.`);
+                  }
                   setStatus("idle");
                 } catch (err) {
                   setStatus("error");
@@ -824,7 +847,7 @@ function EditWorkButton({ item, token, onSaved }) {
             />
             {(form.imageUrls && form.imageUrls.length) ? (
               <div className="mt-3 grid grid-cols-3 gap-2">
-                {form.imageUrls.slice(0,6).map((u, idx) => (
+                {form.imageUrls.slice(0, maxImages).map((u, idx) => (
                   <div key={u + idx} className="relative overflow-hidden rounded-xl border border-border/60 bg-background/30">
                     <img src={u} alt={`Image ${idx+1}`} className="h-24 w-full object-cover" />
                     <button
@@ -841,6 +864,7 @@ function EditWorkButton({ item, token, onSaved }) {
                 ))}
               </div>
             ) : null}
+            <div className="mt-2 text-xs text-muted">Selected {form.imageUrls?.length || 0} of {maxImages}</div>
           </Field>
 
           <div className="flex items-center justify-end gap-2 pt-2">
@@ -1118,7 +1142,8 @@ function AddWork({ token }) {
 
     try {
       const urls = [];
-      const remaining = 6 - (form.imageUrls?.length || 0);
+      const maxImages = getMaxWorkImagesForCategory(form.category);
+      const remaining = maxImages - (form.imageUrls?.length || 0);
       for (const file of files.slice(0, remaining)) {
         const { url } = await uploadImage(file, token);
         urls.push(url);
@@ -1126,8 +1151,11 @@ function AddWork({ token }) {
       setForm((f) => ({
         ...f,
         imageUrl: f.imageUrl || urls[0] || "",
-        imageUrls: [...(f.imageUrls || []), ...urls].slice(0, 6),
+        imageUrls: [...(f.imageUrls || []), ...urls].slice(0, maxImages),
       }));
+      if (files.length > remaining) {
+        setError(`You can upload up to ${maxImages} images for ${form.category}.`);
+      }
       setStatus("idle");
     } catch (err) {
       setStatus("error");
@@ -1150,7 +1178,7 @@ function AddWork({ token }) {
       const payload = {
         ...form,
         imageUrls: (form.imageUrls && form.imageUrls.length)
-          ? form.imageUrls
+          ? form.imageUrls.slice(0, getMaxWorkImagesForCategory(form.category))
           : (form.imageUrl ? [form.imageUrl] : []),
         tags: form.tags
           ? form.tags.split(",").map((t) => t.trim()).filter(Boolean)
@@ -1185,7 +1213,7 @@ function AddWork({ token }) {
           />
         </Field>
 
-        <Field label="Images (up to 6)">
+        <Field label={`Images (up to ${getMaxWorkImagesForCategory(form.category)})`}>
           <input
             type="file"
             accept="image/*"
@@ -1195,13 +1223,14 @@ function AddWork({ token }) {
           />
           {(form.imageUrls && form.imageUrls.length) ? (
             <div className="mt-3 grid grid-cols-3 gap-2">
-              {form.imageUrls.slice(0,6).map((u, idx) => (
+              {form.imageUrls.slice(0, getMaxWorkImagesForCategory(form.category)).map((u, idx) => (
                 <div key={u + idx} className="relative overflow-hidden rounded-xl border border-border/60 bg-background/30">
                   <img src={u} alt={`Image ${idx+1}`} className="h-24 w-full object-cover" />
                 </div>
               ))}
             </div>
           ) : null}
+          <div className="mt-2 text-xs text-muted">Selected {form.imageUrls?.length || 0} of {getMaxWorkImagesForCategory(form.category)}</div>
         </Field>
 
         <Field label="Category" icon={ShieldCheck}>

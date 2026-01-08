@@ -30,6 +30,11 @@ export const createWork = asyncHandler(async (req, res) => {
   if (!imageUrls.length) {
     return res.status(400).json({ message: 'At least one image is required. Upload an image first.' })
   }
+  // Enforce max 20 photos for Acoustic/Entertainment
+  const normalizedCategory = typeof body.category === 'string' ? body.category.trim().toLowerCase() : ''
+  if ((normalizedCategory === 'acoustic' || normalizedCategory === 'entertainment') && imageUrls.length > 20) {
+    return res.status(400).json({ message: 'Maximum 20 photos are allowed for Acoustic and Entertainment.' })
+  }
   // Basic validation and normalization
   if (!body.title || typeof body.title !== 'string' || !body.title.trim()) {
     return res.status(400).json({ message: 'Title is required' })
@@ -71,6 +76,15 @@ export const updateWork = asyncHandler(async (req, res) => {
   }
   if (typeof body.imageUrl === 'string' && body.imageUrl.trim()) {
     nextImageUrls = nextImageUrls.length ? nextImageUrls : [body.imageUrl.trim()]
+  }
+  // Enforce max 20 photos for Acoustic/Entertainment on update
+  const normalizedUpdCategory = typeof body.category === 'string'
+    ? body.category.trim().toLowerCase()
+    : typeof prev.category === 'string'
+      ? prev.category.trim().toLowerCase()
+      : ''
+  if ((normalizedUpdCategory === 'acoustic' || normalizedUpdCategory === 'entertainment') && Array.isArray(nextImageUrls) && nextImageUrls.length > 20) {
+    return res.status(400).json({ message: 'Maximum 20 photos are allowed for Acoustic and Entertainment.' })
   }
   const payload = {
     title: body.title,

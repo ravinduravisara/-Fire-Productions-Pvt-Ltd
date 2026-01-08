@@ -22,7 +22,7 @@ function LazyImage({ src, alt, aspect = 'video', mode = 'contain' }) {
   )
 }
 
-function WorkPreviewModal({ open, item, index, onClose, onSetIndex }) {
+function WorkPreviewModal({ open, item, index, onClose, onSetIndex, offsetTop }) {
   if (!open || !item) return null
 
   const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
@@ -43,10 +43,13 @@ function WorkPreviewModal({ open, item, index, onClose, onSetIndex }) {
         onClick={onClose}
         aria-label="Close preview"
       />
-      <div className="relative mx-auto mt-10 w-full max-w-4xl px-4">
+          <div
+            className="absolute left-1/2 -translate-x-1/2 w-full max-w-7xl px-4"
+            style={{ top: typeof offsetTop === 'number' ? Math.max(20, offsetTop - 40) : 40 }}
+          >
         <div className="overflow-hidden rounded-3xl border border-border/60 bg-background/90 backdrop-blur-xl">
-          <div className="grid grid-cols-1 md:grid-cols-2">
-            <div className="relative bg-background">
+          <div className="grid grid-cols-1 md:grid-cols-3">
+            <div className="relative bg-background md:col-span-2">
               {images.length ? (
                 <LazyImage
                   src={images[Math.min(index, images.length - 1)]}
@@ -88,7 +91,7 @@ function WorkPreviewModal({ open, item, index, onClose, onSetIndex }) {
                         type="button"
                         onClick={() => onSetIndex(i)}
                         className={[
-                          'relative h-16 w-24 shrink-0 overflow-hidden rounded-xl border',
+                          'relative h-20 w-28 shrink-0 overflow-hidden rounded-xl border',
                           i === index ? 'border-brand-600 ring-2 ring-brand-600/30' : 'border-border/60'
                         ].join(' ')}
                         aria-label={`Show image ${i + 1}`}
@@ -155,7 +158,7 @@ function ImageCarousel({ images = [], base = '' }) {
 
   return (
     <div className="relative">
-      <LazyImage src={src} alt="project" aspect="video" mode="contain" />
+      <LazyImage src={src} alt="project" aspect="4/3" mode="contain" />
 
       {images.length > 1 ? (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-between px-2">
@@ -186,6 +189,7 @@ export default function FireCards({ items = [] }) {
   const [previewItem, setPreviewItem] = useState(null)
   const [previewIndex, setPreviewIndex] = useState(0)
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewOffsetTop, setPreviewOffsetTop] = useState(null)
 
   const toggleExpanded = (id) => {
     if (!id) return
@@ -223,14 +227,6 @@ export default function FireCards({ items = [] }) {
           <Wrapper
             key={cardId}
             {...wrapperProps}
-            onClick={(e) => {
-              if (!shouldPreview) return
-              e.preventDefault()
-              e.stopPropagation()
-              setPreviewItem(w)
-              setPreviewIndex(0)
-              setPreviewOpen(true)
-            }}
             className="relative group rounded-lg overflow-hidden border border-border/60 hover:shadow-lg transition-shadow bg-surface">
           
           {(() => {
@@ -243,16 +239,42 @@ export default function FireCards({ items = [] }) {
             if (list.length <= 1) {
               const raw = list[0] || ''
               const imageSrc = raw ? (String(raw).startsWith('http') ? raw : `${filesBase}${raw}`) : ''
+              const handlePreview = (e) => {
+                if (!shouldPreview) return
+                e.preventDefault()
+                e.stopPropagation()
+                const y = e.nativeEvent?.clientY ?? e.clientY
+                if (typeof y === 'number') setPreviewOffsetTop(y)
+                setPreviewItem(w)
+                setPreviewIndex(0)
+                setPreviewOpen(true)
+              }
               return (
-                <LazyImage src={imageSrc} alt="project" aspect="video" mode="contain" />
+                <div onClick={handlePreview} className={shouldPreview ? 'cursor-zoom-in' : ''}>
+                  <LazyImage src={imageSrc} alt="project" aspect="video" mode="contain" />
+                </div>
               )
             }
 
             // For Fire Acoustic and Fire Entertainment, show one-by-one moving images
             const isCarousel = ['Acoustic', 'Entertainment'].includes(w.category)
             if (isCarousel) {
-              return <ImageCarousel images={list} base={filesBase} />
+              const handlePreview = (e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                const y = e.nativeEvent?.clientY ?? e.clientY
+                if (typeof y === 'number') setPreviewOffsetTop(y)
+                setPreviewItem(w)
+                setPreviewIndex(0)
+                setPreviewOpen(true)
+              }
+              return (
+                <div onClick={handlePreview} className="cursor-zoom-in">
+                  <ImageCarousel images={list} base={filesBase} />
+                </div>
+              )
             }
+                  
 
             // Fallback: thumbnail grid for other categories
             const six = list.slice(0, 6)
@@ -319,6 +341,7 @@ export default function FireCards({ items = [] }) {
       index={previewIndex}
       onClose={() => setPreviewOpen(false)}
       onSetIndex={setPreviewIndex}
+      offsetTop={previewOffsetTop}
     />
   </>
   )
