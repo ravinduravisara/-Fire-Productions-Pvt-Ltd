@@ -14,6 +14,7 @@ const SERVICE_GROUPS = [
 export default function LatestWorks() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
+  const [didAutoScroll, setDidAutoScroll] = useState(false)
 
   useEffect(() => {
     (async () => {
@@ -55,6 +56,37 @@ export default function LatestWorks() {
     }
     return results
   }, [items])
+
+  // After items render, auto-scroll to the previously clicked card (if any)
+  useEffect(() => {
+    if (didAutoScroll || loading) return
+    let workId
+    try { workId = sessionStorage.getItem('returnToWorkId') } catch {}
+    if (!workId) return
+
+    let attempts = 0
+    const maxAttempts = 30 // ~500ms at 60fps
+    const scrollToCard = () => {
+      const el = document.getElementById(`work-card-${workId}`)
+      if (el) {
+        try { sessionStorage.removeItem('returnToWorkId') } catch {}
+        try { sessionStorage.removeItem('returnToSource') } catch {}
+        try { sessionStorage.removeItem('returnToTime') } catch {}
+        setDidAutoScroll(true)
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        return
+      }
+      attempts += 1
+      if (attempts < maxAttempts) {
+        requestAnimationFrame(scrollToCard)
+      } else {
+        // Give up and clear the marker to avoid repeated tries
+        try { sessionStorage.removeItem('returnToWorkId') } catch {}
+      }
+    }
+
+    requestAnimationFrame(scrollToCard)
+  }, [loading, groups, didAutoScroll])
 
   return (
     <section className="py-16">

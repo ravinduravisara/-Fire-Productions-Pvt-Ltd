@@ -105,6 +105,7 @@ export default function Services() {
   const initRef = useRef(false);
   const prefetchedRef = useRef(new Set());
   const panelRef = useRef(null);
+  const returnWorkIdRef = useRef(null);
 
   // Helper: map a DB service into UI card format
   const mapDbService = (s) => {
@@ -301,12 +302,93 @@ export default function Services() {
   useEffect(() => {
     if (!selectedService || !panelRef.current) return;
     try {
-      const rect = panelRef.current.getBoundingClientRect();
-      const offset = 80; // account for navbar height
-      const top = rect.top + window.scrollY - offset;
-      window.scrollTo({ top, behavior: shouldReduceMotion ? 'auto' : 'smooth' });
+      // Skip generic panel scroll when returning to a specific card from Services (Acoustic/Entertainment)
+      const src = sessionStorage.getItem('returnToSource');
+      const wid = sessionStorage.getItem('returnToWorkId');
+      let tag = sessionStorage.getItem('returnToServiceTag');
+      const allowed = ['Acoustic', 'Entertainment'];
+      if (!tag && wid && Array.isArray(items) && items.length) {
+        const w = items.find((it) => String(it.id || it._id) === String(wid));
+        if (w) tag = (Array.isArray(w.tags) && w.tags.find(Boolean)) || w.category || '';
+      }
+      const shouldSkip = src === 'services' && wid && allowed.includes(String(tag));
+      if (!shouldSkip) {
+        const rect = panelRef.current.getBoundingClientRect();
+        const offset = 80; // account for navbar height
+        const top = rect.top + window.scrollY - offset;
+        window.scrollTo({ top, behavior: shouldReduceMotion ? 'auto' : 'smooth' });
+      }
     } catch {}
-  }, [selectedService, shouldReduceMotion]);
+  }, [selectedService, shouldReduceMotion, items]);
+
+  // Restore service and scroll to the exact clicked card (only for Acoustic/Entertainment)
+  useEffect(() => {
+    // Establish return target once
+    if (!returnWorkIdRef.current) {
+      try {
+        const src = sessionStorage.getItem('returnToSource');
+        const wid = sessionStorage.getItem('returnToWorkId');
+        if (src === 'services' && wid) returnWorkIdRef.current = wid;
+      } catch {}
+    }
+    const workId = returnWorkIdRef.current;
+    if (!workId) return;
+
+    // Only handle for Acoustic/Entertainment
+    let svcKey = null, svcTag = null;
+    try {
+      svcKey = sessionStorage.getItem('returnToServiceKey');
+      svcTag = sessionStorage.getItem('returnToServiceTag');
+    } catch {}
+    const allowed = ['Acoustic', 'Entertainment'];
+    if (!svcTag) {
+      const w = items.find((it) => String(it.id || it._id) === String(workId));
+      if (w) svcTag = (Array.isArray(w.tags) && w.tags.find(Boolean)) || w.category || '';
+    }
+    if (!allowed.includes(String(svcTag))) return;
+
+    // Ensure correct service is selected first
+    if (svcKey && selected !== svcKey) {
+      setSelected(svcKey);
+      return;
+    }
+    if (!svcKey && svcTag) {
+      const svc = services.find((s) => s.tag === svcTag);
+      if (svc && selected !== svc.key) {
+        setSelected(svc.key);
+        return;
+      }
+    }
+
+    // Now attempt to find and scroll the element
+    if (!selectedService) return;
+    if (!allowed.includes(String(selectedService.tag))) return;
+    if (!Array.isArray(items) || items.length === 0) return;
+
+    let tries = 0;
+    const maxTries = 150;
+    const tick = () => {
+      const el = document.getElementById(`work-card-${workId}`);
+      if (el) {
+        try { sessionStorage.removeItem('returnToWorkId'); } catch {}
+        try { sessionStorage.removeItem('returnToSource'); } catch {}
+        try { sessionStorage.removeItem('returnToTime'); } catch {}
+        try { sessionStorage.removeItem('returnToServiceKey'); } catch {}
+        try { sessionStorage.removeItem('returnToServiceTag'); } catch {}
+        returnWorkIdRef.current = null;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      tries += 1;
+      if (tries < maxTries) requestAnimationFrame(tick);
+      else {
+        // give up and clear markers
+        try { sessionStorage.removeItem('returnToWorkId'); } catch {}
+        try { sessionStorage.removeItem('returnToSource'); } catch {}
+      }
+    };
+    setTimeout(() => requestAnimationFrame(tick), 40);
+  }, [items, services, selected, selectedService]);
 
   return (
     <section className="relative py-16 sm:py-20">
@@ -472,7 +554,7 @@ export default function Services() {
                   </div>
                 ) : (
                   <>
-                    <FireCards items={filtered} />
+                    <FireCards items={filtered} serviceKey={selectedService?.key} serviceTag={selectedService?.tag} />
                     {filtered.length === 0 && (
                       <p className="mt-4 text-sm text-muted">
                         No projects found for this service yet.

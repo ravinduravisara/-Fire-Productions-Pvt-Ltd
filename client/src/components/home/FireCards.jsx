@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 function LazyImage({ src, alt, aspect = 'video', mode = 'contain' }) {
   const [loaded, setLoaded] = useState(false)
@@ -185,9 +185,12 @@ function ImageCarousel({ images = [], base = '' }) {
   )
 }
 
-export default function FireCards({ items = [] }) {
+export default function FireCards({ items = [], serviceKey, serviceTag }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [expandedIds, setExpandedIds] = useState(() => new Set())
+    const isFromServices = location.pathname.startsWith('/services')
+    const isReturnable = ['Acoustic', 'Entertainment'].includes(String(serviceTag))
   const [previewItem, setPreviewItem] = useState(null)
   const [previewIndex, setPreviewIndex] = useState(0)
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -219,7 +222,10 @@ export default function FireCards({ items = [] }) {
       {items.map((w, idx) => {
         const isLink = !!w.link
         const Wrapper = isLink ? 'a' : 'div'
-        const shouldPreview = ['Acoustic', 'Entertainment'].includes(w.category)
+        const categoryLc = String(w.category || '').toLowerCase()
+        const hasTagAcoustic = Array.isArray(w.tags) && w.tags.includes('Acoustic')
+        const hasTagEntertainment = Array.isArray(w.tags) && w.tags.includes('Entertainment')
+        const shouldPreview = categoryLc === 'acoustic' || categoryLc === 'entertainment' || hasTagAcoustic || hasTagEntertainment
         const wrapperProps = isLink ? { href: w.link, target: '_blank', rel: 'noreferrer' } : {}
         // Stable key derived from item identity; avoid index
         const cardId = w.id || w._id || `${String(w.title||'work').toLowerCase()}-${String(w.createdAt||w.imageUrl||w.url||idx)}`
@@ -229,6 +235,7 @@ export default function FireCards({ items = [] }) {
           <Wrapper
             key={cardId}
             {...wrapperProps}
+            id={w.id || w._id ? `work-card-${w.id || w._id}` : undefined}
             className="relative group rounded-lg overflow-hidden border border-border/60 hover:shadow-lg transition-shadow bg-surface">
           
           {(() => {
@@ -247,6 +254,15 @@ export default function FireCards({ items = [] }) {
                 e.stopPropagation()
                 const targetId = w.id || w._id
                 if (targetId) {
+                  try {
+                    if (isFromServices && isReturnable) {
+                      sessionStorage.setItem('returnToWorkId', String(targetId))
+                      sessionStorage.setItem('returnToSource', 'services')
+                      sessionStorage.setItem('returnToTime', String(Date.now()))
+                      if (serviceKey) sessionStorage.setItem('returnToServiceKey', String(serviceKey))
+                      if (serviceTag) sessionStorage.setItem('returnToServiceTag', String(serviceTag))
+                    }
+                  } catch {}
                   navigate(`/works/${targetId}`)
                   return
                 }
@@ -264,13 +280,22 @@ export default function FireCards({ items = [] }) {
             }
 
             // For Fire Acoustic and Fire Entertainment, show one-by-one moving images
-            const isCarousel = ['Acoustic', 'Entertainment'].includes(w.category)
+            const isCarousel = categoryLc === 'acoustic' || categoryLc === 'entertainment' || hasTagAcoustic || hasTagEntertainment
             if (isCarousel) {
               const handlePreview = (e) => {
                 e.preventDefault()
                 e.stopPropagation()
                 const targetId = w.id || w._id
                 if (targetId) {
+                  try {
+                    if (isFromServices && isReturnable) {
+                      sessionStorage.setItem('returnToWorkId', String(targetId))
+                      sessionStorage.setItem('returnToSource', 'services')
+                      sessionStorage.setItem('returnToTime', String(Date.now()))
+                      if (serviceKey) sessionStorage.setItem('returnToServiceKey', String(serviceKey))
+                      if (serviceTag) sessionStorage.setItem('returnToServiceTag', String(serviceTag))
+                    }
+                  } catch {}
                   navigate(`/works/${targetId}`)
                   return
                 }

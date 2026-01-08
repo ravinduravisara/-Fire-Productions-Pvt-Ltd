@@ -91,9 +91,12 @@ export default function WorkDetail() {
             <button
               type="button"
               onClick={() => {
-                if (isAcoustic) return navigate('/services#acoustic')
-                if (isEntertainment) return navigate('/services#entertainment')
-                navigate(-1)
+                // Prefer true back navigation to return to exact prior spot
+                if (window.history.state && window.history.state.idx > 0) {
+                  return navigate(-1)
+                }
+                // Fallback if no history entry (e.g., opened in new tab)
+                navigate('/')
               }}
               className="inline-flex items-center rounded-md border border-border/60 bg-card/30 px-3 py-2 text-sm font-semibold text-text hover:bg-card/50"
             >
