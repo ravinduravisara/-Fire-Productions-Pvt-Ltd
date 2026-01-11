@@ -491,7 +491,7 @@ function EditProductButton({ item, token, onSaved }) {
             />
           </Field>
 
-          <Field label="Images (up to 3)">
+          <Field label="Images (up to 6)">
             <input
               type="file"
               accept="image/*"
@@ -503,7 +503,7 @@ function EditProductButton({ item, token, onSaved }) {
                 setError("");
                 try {
                   const urls = [];
-                  const remaining = 3 - (form.imageUrls?.length || 0);
+                  const remaining = 6 - (form.imageUrls?.length || 0);
                   for (const file of files.slice(0, remaining)) {
                     const { url } = await uploadImage(file, token);
                     urls.push(url);
@@ -511,7 +511,7 @@ function EditProductButton({ item, token, onSaved }) {
                   setForm((f) => ({
                     ...f,
                     imageUrl: f.imageUrl || urls[0] || "",
-                    imageUrls: [...(f.imageUrls || []), ...urls].slice(0, 3),
+                    imageUrls: [...(f.imageUrls || []), ...urls].slice(0, 6),
                   }));
                   setStatus("idle");
                 } catch (err) {
@@ -523,7 +523,7 @@ function EditProductButton({ item, token, onSaved }) {
             />
             {(form.imageUrls && form.imageUrls.length) ? (
               <div className="mt-3 grid grid-cols-3 gap-2">
-                {form.imageUrls.slice(0,3).map((u, idx) => (
+                {form.imageUrls.slice(0,6).map((u, idx) => (
                   <div key={u + idx} className="relative overflow-hidden rounded-xl border border-border/60 bg-background/30">
                     <img src={u} alt={`Image ${idx+1}`} className="h-24 w-full object-cover" />
                     <button
@@ -918,7 +918,7 @@ function AddProduct({ token }) {
 
     try {
       const urls = [];
-      const remaining = 3 - (form.imageUrls?.length || 0);
+      const remaining = 6 - (form.imageUrls?.length || 0);
       for (const file of files.slice(0, remaining)) {
         const { url } = await uploadImage(file, token);
         urls.push(url);
@@ -926,7 +926,7 @@ function AddProduct({ token }) {
       setForm((f) => ({
         ...f,
         imageUrl: f.imageUrl || urls[0] || "",
-        imageUrls: [...(f.imageUrls || []), ...urls].slice(0, 3),
+        imageUrls: [...(f.imageUrls || []), ...urls].slice(0, 6),
       }));
       setStatus("idle");
     } catch (err) {
@@ -950,7 +950,7 @@ function AddProduct({ token }) {
       const payload = {
         ...form,
         imageUrls: (form.imageUrls && form.imageUrls.length)
-          ? form.imageUrls.slice(0,3)
+          ? form.imageUrls.slice(0,6)
           : (form.imageUrl ? [form.imageUrl] : []),
         price: Number(form.price || 0),
       };
@@ -986,7 +986,7 @@ function AddProduct({ token }) {
           />
         </Field>
 
-        <Field label="Images (up to 3)">
+        <Field label="Images (up to 6)">
           <input
             type="file"
             accept="image/*"
@@ -996,7 +996,7 @@ function AddProduct({ token }) {
           />
           {(form.imageUrls && form.imageUrls.length) ? (
             <div className="mt-3 grid grid-cols-3 gap-2">
-              {form.imageUrls.slice(0,3).map((u, idx) => (
+              {form.imageUrls.slice(0,6).map((u, idx) => (
                 <div key={u + idx} className="relative overflow-hidden rounded-xl border border-border/60 bg-background/30">
                   <img src={u} alt={`Image ${idx+1}`} className="h-24 w-full object-cover" />
                   <button

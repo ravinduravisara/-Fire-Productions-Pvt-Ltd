@@ -17,6 +17,7 @@ import {
 import SectionTitle from "../components/ui/SectionTitle";
 import SEO from "../components/seo/SEO";
 import { getProducts } from "../services/products.api";
+import { useNavigate } from "react-router-dom";
 import { listCategories } from "../services/categories.api";
 import Button from "../components/ui/Button";
 
@@ -48,7 +49,7 @@ function getImageSrcList(item) {
     : [item.imageUrl || item.image || item.url].filter(Boolean);
   return raws
     .filter((u) => typeof u === 'string' && u.trim())
-    .slice(0, 3)
+    .slice(0, 6)
     .map((u) => (String(u).startsWith('http') ? u : `${filesBase}${u}`));
 }
 
@@ -88,6 +89,7 @@ function ProductCard({ item, onAdd, onPreview }) {
 
   return (
     <motion.div
+      id={`product-${item._id || item.id}`}
       initial={reduce ? { opacity: 0 } : { opacity: 0, y: 10, filter: "blur(6px)" }}
       animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, filter: "blur(0px)" }}
       transition={reduce ? { duration: 0.01 } : { duration: 0.35 }}
@@ -548,6 +550,7 @@ export default function Products() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [previewItem, setPreviewItem] = useState(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const navigate = useNavigate();
 
   // UI controls
   const [query, setQuery] = useState("");
@@ -556,7 +559,112 @@ export default function Products() {
   const [category, setCategory] = useState(""); // parent category
   const [subCategory, setSubCategory] = useState(""); // child
 
+  // Initialize cart from localStorage and respond to updates
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem('cart');
+      const arr = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(arr)) {
+        setCart(arr.map((p) => ({
+          id: p.id,
+          title: p.title,
+          price: Number(p.price || 0),
+          qty: Math.max(1, Number(p.qty || 1)),
+          category: p.category || '',
+          subCategory: p.subCategory || '',
+          description: p.description || '',
+        })));
+      }
+      if (sessionStorage.getItem('cart:open') === '1') {
+        setDrawerOpen(true);
+        sessionStorage.removeItem('cart:open');
+      }
+    } catch {}
+    const onStorage = (e) => {
+      if (e.key === 'cart') {
+        try {
+          const arr = e.newValue ? JSON.parse(e.newValue) : [];
+          if (Array.isArray(arr)) {
+            setCart(arr.map((p) => ({
+              id: p.id,
+              title: p.title,
+              price: Number(p.price || 0),
+              qty: Math.max(1, Number(p.qty || 1)),
+              category: p.category || '',
+              subCategory: p.subCategory || '',
+              description: p.description || '',
+            })));
+          }
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  // Persist cart to localStorage whenever it changes
+  useEffect(() => {
+    try { localStorage.setItem('cart', JSON.stringify(cart)); } catch {}
+  }, [cart]);
+
+  // Listen for cart additions from ProductDetail
+  useEffect(() => {
+    const onCartAdd = (e) => {
+      const { item, qty } = e.detail || {};
+      if (item) {
+        addToCart(item, qty || 1);
+      }
+    };
+    window.addEventListener('cart:add', onCartAdd);
+    return () => window.removeEventListener('cart:add', onCartAdd);
+  }, []);
+
+  // Scroll to viewed product when returning from detail
+  useEffect(() => {
+    const scrollToProduct = (pid) => {
+      if (!pid) return;
+      // Wait for grid to be in DOM
+      setTimeout(() => {
+        const el = document.getElementById(`product-${pid}`);
+        if (el) {
+          try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch {}
+          try {
+            el.classList.add('ring-2', 'ring-brand-600/40');
+            setTimeout(() => el.classList.remove('ring-2', 'ring-brand-600/40'), 1600);
+          } catch {}
+        }
+      }, 0);
+    };
+
+    const onReturn = (e) => {
+      const pid = e?.detail?.id;
+      scrollToProduct(pid);
+    };
+    window.addEventListener('return:product', onReturn);
+
+    if (!loading && items.length) {
+      try {
+        const pid = sessionStorage.getItem('returnToProductId');
+        if (pid) {
+          scrollToProduct(pid);
+          sessionStorage.removeItem('returnToProductId');
+        }
+      } catch {}
+    }
+
+    return () => window.removeEventListener('return:product', onReturn);
+  }, [items, loading]);
+
+  useEffect(() => {
+    // Render instantly from cached list if available
+    try {
+      const cached = sessionStorage.getItem('products:list');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        setItems(parsed);
+        setLoading(false);
+      }
+    } catch {}
     (async () => {
       try {
         const data = await getProducts();
@@ -568,6 +676,16 @@ export default function Products() {
           subCategory: d.subCategory || "",
         }));
         setItems(normalized);
+        try { sessionStorage.setItem('products:list', JSON.stringify(normalized)); } catch {}
+        // Cache products for faster detail view navigation
+        try {
+          normalized.forEach((p) => {
+            const pid = p._id || p.id;
+            if (pid) {
+              sessionStorage.setItem(`product:${pid}`, JSON.stringify(p));
+            }
+          });
+        } catch {}
         try {
           const allCats = await listCategories();
           setCats(allCats);
@@ -584,21 +702,22 @@ export default function Products() {
     const id = itm._id || itm.id;
     setCart((prev) => {
       const existing = prev.find((p) => p.id === id);
-      if (existing) {
-        return prev.map((p) => (p.id === id ? { ...p, qty: p.qty + Math.max(1, Number(qty) || 1) } : p));
-      }
-      return [
-        ...prev,
-        {
-          id,
-          title: itm.title,
-          price: Number(itm.price || 0),
-          qty: Math.max(1, Number(qty) || 1),
-          category: itm.category || "",
-          subCategory: itm.subCategory || "",
-          description: itm.description || "",
-        },
-      ];
+      const next = existing
+        ? prev.map((p) => (p.id === id ? { ...p, qty: p.qty + Math.max(1, Number(qty) || 1) } : p))
+        : [
+            ...prev,
+            {
+              id,
+              title: itm.title,
+              price: Number(itm.price || 0),
+              qty: Math.max(1, Number(qty) || 1),
+              category: itm.category || "",
+              subCategory: itm.subCategory || "",
+              description: itm.description || "",
+            },
+          ];
+      try { localStorage.setItem('cart', JSON.stringify(next)); } catch {}
+      return next;
     });
     setDrawerOpen(true);
   };
@@ -792,7 +911,7 @@ export default function Products() {
                     key={item._id || item.id}
                     item={item}
                     onAdd={addToCart}
-                    onPreview={(itm) => { setPreviewItem(itm); setPreviewOpen(true); }}
+                    onPreview={(itm) => { const pid = itm._id || itm.id; if (pid) navigate(`/products/${pid}`, { state: itm }); }}
                   />
                 ))}
               </div>
@@ -808,13 +927,7 @@ export default function Products() {
         </div>
       </div>
 
-      {/* Preview modal */}
-      <ProductPreview
-        open={previewOpen}
-        item={previewItem}
-        onClose={() => setPreviewOpen(false)}
-        onAdd={(item, qty) => { addToCart(item, qty); setPreviewOpen(false); }}
-      />
+      {/* Preview modal retained but disabled by navigation; could be removed later */}
 
       {/* Cart drawer */}
       <CartDrawer

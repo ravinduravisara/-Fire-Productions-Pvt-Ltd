@@ -5,6 +5,11 @@ export const getProducts = async () => {
   return data
 }
 
+export const getProduct = async (id) => {
+  const { data } = await api.get(`/products/${id}`)
+  return data
+}
+
 export const createProduct = async (payload, token) => {
   const client = withAdmin(token)
   const { data } = await client.post('/products', payload)

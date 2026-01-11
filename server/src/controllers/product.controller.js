@@ -10,6 +10,17 @@ export const listProducts = asyncHandler(async (req, res) => {
   res.json(products)
 })
 
+export const getProduct = asyncHandler(async (req, res) => {
+  if (!isConnected()) {
+    return res.status(503).json({ message: 'DB not connected' })
+  }
+  const id = req.params.id
+  if (!id) return res.status(400).json({ message: 'Product id is required' })
+  const product = await prisma.product.findUnique({ where: { id } })
+  if (!product) return res.status(404).json({ message: 'Not found' })
+  res.json(product)
+})
+
 export const createProduct = asyncHandler(async (req, res) => {
   if (!isConnected()) {
     return res.status(503).json({ message: 'DB not connected' })
@@ -29,6 +40,10 @@ export const createProduct = asyncHandler(async (req, res) => {
   }
   if (!imageUrls.length) {
     return res.status(400).json({ message: 'At least one image is required. Upload an image first.' })
+  }
+  // Enforce maximum of 6 images
+  if (imageUrls.length > 6) {
+    return res.status(400).json({ message: 'Maximum 6 images allowed for a product.' })
   }
   // Basic validation and type coercion
   const priceNum = Number(body.price)
@@ -96,6 +111,10 @@ export const updateProduct = asyncHandler(async (req, res) => {
     nextImageUrls = Array.isArray(prev.imageUrls) && prev.imageUrls.length
       ? prev.imageUrls
       : (prev.imageUrl ? [prev.imageUrl] : [])
+  }
+  // Enforce maximum of 6 images
+  if (nextImageUrls.length > 6) {
+    return res.status(400).json({ message: 'Maximum 6 images allowed for a product.' })
   }
   const nextPrimary = nextImageUrls[0] || prev.imageUrl || ''
 
