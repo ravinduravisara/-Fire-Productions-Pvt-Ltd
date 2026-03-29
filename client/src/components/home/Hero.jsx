@@ -147,7 +147,7 @@ export default function Hero() {
 
             <button
               type="button"
-              onClick={() => go("/services")}
+              onClick={() => go("/services/music")}
               className="group inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-muted transition hover:text-text"
             >
               <PlayCircle className="h-5 w-5 text-secondary" />

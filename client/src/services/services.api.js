@@ -1,7 +1,9 @@
 import { api, withAdmin } from './api'
 
 export const listServices = async () => {
-  const { data } = await api.get('/services')
+  const { data } = await api.get('/services', {
+    params: { _t: Date.now() }
+  })
   return data
 }
 

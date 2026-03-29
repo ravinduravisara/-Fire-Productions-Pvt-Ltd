@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Sparkles, Music2, Video, Mic2, PartyPopper, X, ArrowRight } from "lucide-react";
 import SectionTitle from "../components/ui/SectionTitle";
@@ -16,6 +16,13 @@ const LOGO_ASSETS = {
   films: "/images/logos/films.png",
   entertainment: "/images/logos/entertainment.png",
 };
+
+const slugify = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .replace(/^fire\s+/, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
 const FALLBACK_SERVICES = [
   { 
@@ -96,6 +103,8 @@ function SkeletonCard() {
 
 export default function Services() {
   const location = useLocation();
+  const { serviceSlug } = useParams();
+  const isServiceRoute = Boolean(serviceSlug);
   const [selected, setSelected] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true); // works loading
@@ -202,20 +211,17 @@ export default function Services() {
     })();
   }, []);
 
-  // Auto-select a service based on URL hash (e.g., #acoustic)
+  // Auto-select a service based on route param or hash fallback.
   useEffect(() => {
-    const hash = String(location.hash || '').replace('#', '').toLowerCase();
-    if (!hash || !services.length) return;
-    // Find by tag mapping rather than DB key to be robust
-    const tag = hash === 'acoustic' ? 'Acoustic'
-               : hash === 'music' ? 'Music'
-               : hash === 'films' ? 'Films'
-               : hash === 'entertainment' ? 'Entertainment'
-               : '';
-    if (!tag) return;
-    const svc = services.find((s) => String(s.tag) === tag);
+    if (!services.length) return;
+    const routeSlug = String(serviceSlug || "").toLowerCase();
+    const hashSlug = String(location.hash || '').replace('#', '').toLowerCase();
+    const targetSlug = routeSlug || hashSlug;
+    if (!targetSlug) return;
+
+    const svc = services.find((s) => slugify(s.tag || s.title) === targetSlug);
     if (svc) setSelected(svc.key);
-  }, [location.hash, services]);
+  }, [serviceSlug, location.hash, services]);
 
   // Prefetch images for a service tag on hover/click to warm cache
   const imageSrcsForWork = (w) => {
@@ -272,13 +278,19 @@ export default function Services() {
     [selected, services]
   );
 
+  const visibleServices = useMemo(() => {
+    if (!isServiceRoute) return services;
+    const routeSlug = String(serviceSlug || "").toLowerCase();
+    return services.filter((s) => slugify(s.tag || s.title) === routeSlug);
+  }, [isServiceRoute, serviceSlug, services]);
+
   const filtered = useMemo(() => {
     if (!selectedService) return [];
     const tag = selectedService.tag;
     return items.filter((w) => (w.tags || []).includes(tag) || (w.category || '') === tag);
   }, [items, selectedService]);
 
-  const toggle = (key) => setSelected((prev) => (prev === key ? null : key));
+  const toggle = (key) => setSelected((prev) => (isServiceRoute ? key : (prev === key ? null : key)));
 
   const wrap = {
     hidden: { opacity: 0 },
@@ -418,26 +430,35 @@ export default function Services() {
         <motion.div variants={wrap} initial="hidden" animate="show">
           <motion.div variants={item}>
             <SectionTitle
-              title="Services"
-              subtitle="Explore our capabilities — select a service to see related projects"
+              title={isServiceRoute ? (selectedService?.title || "Service") : "Services"}
+              subtitle={
+                isServiceRoute
+                  ? "Explore related projects for this service"
+                  : "Explore our capabilities — select a service to see related projects"
+              }
             />
           </motion.div>
 
-          {/* Services grid (uses skeleton while loading to avoid reflow) */}
-          <motion.div
-            variants={wrap}
-            initial="hidden"
-            animate="show"
-            className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
-          >
-                {servicesLoading ? (
-                  <>
-                    <SkeletonCard />
-                    <SkeletonCard />
-                    <SkeletonCard />
-                    <SkeletonCard />
-                  </>
-                ) : services.map((s) => {
+          {/* Services grid (only on generic /services listing page) */}
+          {!isServiceRoute && (
+            <motion.div
+              variants={wrap}
+              initial="hidden"
+              animate="show"
+              className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
+            >
+              {servicesLoading ? (
+                <>
+                  <SkeletonCard />
+                  <SkeletonCard />
+                  <SkeletonCard />
+                  <SkeletonCard />
+                </>
+              ) : visibleServices.length === 0 ? (
+                <div className="col-span-full rounded-2xl border border-border/60 bg-card/30 p-6 text-center text-sm text-muted">
+                  Service not found.
+                </div>
+              ) : visibleServices.map((s) => {
               const active = selected === s.key;
               const Icon = s.icon;
               const hasLogo = !!s.logo;
@@ -531,7 +552,14 @@ export default function Services() {
                 </motion.button>
               );
             })}
-          </motion.div>
+            </motion.div>
+          )}
+
+          {isServiceRoute && !servicesLoading && !selectedService && (
+            <div className="mt-10 rounded-2xl border border-border/60 bg-card/30 p-6 text-center text-sm text-muted">
+              Service not found.
+            </div>
+          )}
 
           {/* Selected projects panel */}
           {selectedService && (
@@ -544,14 +572,16 @@ export default function Services() {
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setSelected(null)}
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-border/60 bg-card/40 px-4 py-2 text-sm font-semibold text-text backdrop-blur transition hover:bg-card/60 hover:border-brand-600/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600/60"
-                >
-                  <X className="h-4 w-4" />
-                  Clear selection
-                </button>
+                {!isServiceRoute && (
+                  <button
+                    type="button"
+                    onClick={() => setSelected(null)}
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-border/60 bg-card/40 px-4 py-2 text-sm font-semibold text-text backdrop-blur transition hover:bg-card/60 hover:border-brand-600/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600/60"
+                  >
+                    <X className="h-4 w-4" />
+                    Clear selection
+                  </button>
+                )}
               </div>
 
               <div className="mt-6 rounded-2xl border border-border/60 bg-card/30 p-4 backdrop-blur-xl sm:p-6 min-h-[360px]">

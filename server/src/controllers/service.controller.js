@@ -6,7 +6,10 @@ export const listServices = asyncHandler(async (req, res) => {
   const services = await prisma.service.findMany({
     orderBy: [{ order: 'asc' }, { createdAt: 'desc' }]
   })
-  try { res.set('Cache-Control', 'public, max-age=120') } catch {}
+  try {
+    const hasAdminToken = Boolean(req.headers['x-admin-token'])
+    res.set('Cache-Control', hasAdminToken ? 'private, no-store' : 'public, max-age=120')
+  } catch {}
   res.json(services)
 })
 

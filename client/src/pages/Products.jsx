@@ -755,8 +755,8 @@ export default function Products() {
   return (
     <section className="relative py-16 sm:py-20">
       <SEO
-        title="Products"
-        description="Browse Fire Productions products and acoustic materials. Quality-assured items with fast delivery."
+        title="Fire Store"
+        description="Browse the Fire Store for acoustic materials and gear from Fire Productions. Quality-assured items with fast delivery."
         path="/products"
       />
       {/* background glow */}
@@ -767,7 +767,7 @@ export default function Products() {
 
       <div className="container">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <SectionTitle title="Products" subtitle="All products by Fire Acoustic" />
+          <SectionTitle title="Fire Store" subtitle="All products by Fire Acoustic" />
 
           {/* Cart button */}
           <button

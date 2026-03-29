@@ -3,19 +3,92 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { Menu, X, Flame } from "lucide-react";
 import logo from "../../assets/Logo.png";
+import { listServices } from "../../services/services.api";
 
-const nav = [
-  { to: "/", label: "Home" },
+const baseNav = [
   { to: "/about", label: "About" },
-  { to: "/services", label: "Services" },
-  { to: "/products", label: "Products" },
+  { to: "/products", label: "Fire Store" },
   { to: "/contact", label: "Contact" },
 ];
 
+const fallbackServiceNav = [
+  { to: "/services/music", label: "Fire Music" },
+  { to: "/services/acoustic", label: "Fire Acoustic" },
+  { to: "/services/entertainment", label: "Fire Entertainment" },
+  { to: "/services/films", label: "Fire Films" },
+];
+
+const slugify = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .replace(/^fire\s+/, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [serviceNav, setServiceNav] = useState(fallbackServiceNav);
   const { pathname } = useLocation();
   const shouldReduceMotion = useReducedMotion();
+
+  const nav = useMemo(() => {
+    const about = baseNav.find((n) => n.to === "/about");
+    const store = baseNav.find((n) => n.to === "/products");
+    const contact = baseNav.find((n) => n.to === "/contact");
+    return [about, ...serviceNav, store, contact].filter(Boolean);
+  }, [serviceNav]);
+
+  const desktopCenterNav = nav.filter((n) => n.to !== "/about" && n.to !== "/contact");
+  const desktopActionLinks = nav.filter((n) => n.to === "/about" || n.to === "/contact");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const hydrateServices = async () => {
+      try {
+        const data = await listServices();
+        if (!Array.isArray(data) || !data.length) {
+          if (!cancelled) setServiceNav(fallbackServiceNav);
+          return;
+        }
+
+        const ordered = [...data].sort((a, b) => {
+          const ao = Number.isFinite(a?.order) ? a.order : Number.MAX_SAFE_INTEGER;
+          const bo = Number.isFinite(b?.order) ? b.order : Number.MAX_SAFE_INTEGER;
+          return ao - bo;
+        });
+
+        const mapped = ordered
+          .map((s) => {
+            const label = String(s?.name || "").trim();
+            const routeSlug = slugify(s?.category || label);
+            if (!label || !routeSlug) return null;
+            return { to: `/services/${routeSlug}`, label };
+          })
+          .filter(Boolean);
+
+        const unique = [];
+        const seen = new Set();
+        for (const item of mapped) {
+          if (seen.has(item.to)) continue;
+          seen.add(item.to);
+          unique.push(item);
+        }
+
+        if (!cancelled) setServiceNav(unique.length ? unique : fallbackServiceNav);
+      } catch {
+        if (!cancelled) setServiceNav(fallbackServiceNav);
+      }
+    };
+
+    hydrateServices();
+    const onServicesUpdated = () => hydrateServices();
+    window.addEventListener("services:updated", onServicesUpdated);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("services:updated", onServicesUpdated);
+    };
+  }, []);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -71,6 +144,10 @@ export default function Navbar() {
     [shouldReduceMotion]
   );
 
+  const isNavItemActive = (to) => {
+    return pathname === to;
+  };
+
   return (
     <motion.header
       variants={variants.bar}
@@ -105,47 +182,44 @@ export default function Navbar() {
 
         {/* Desktop Nav */}
         <nav className="hidden items-center gap-1 md:flex">
-          {nav.map((n) => (
-            <NavLink
+          {desktopCenterNav.map((n) => (
+            <Link
               key={n.to}
               to={n.to}
-              end={n.to === "/"}
-              className={({ isActive }) =>
+              className={
                 [
                   linkBase,
                   "px-3 py-2 rounded-full",
-                  isActive
+                  isNavItemActive(n.to)
                     ? "text-text"
                     : "text-muted hover:text-text",
                 ].join(" ")
               }
             >
-              {({ isActive }) => (
-                <>
-                  <span className="relative z-10">{n.label}</span>
+              <>
+                <span className="relative z-10">{n.label}</span>
 
-                  {/* active pill */}
-                  {isActive && (
-                    <motion.span
-                      layoutId="nav-pill"
-                      className="absolute inset-0 rounded-full bg-brand-600/12 ring-1 ring-brand-600/25"
-                      transition={
-                        shouldReduceMotion
-                          ? { duration: 0.01 }
-                          : { type: "spring", stiffness: 420, damping: 32 }
-                      }
-                      aria-hidden="true"
-                    />
-                  )}
-
-                  {/* hover underline glow */}
-                  <span
-                    className="pointer-events-none absolute left-1/2 top-[calc(100%-4px)] h-[2px] w-0 -translate-x-1/2 rounded-full bg-brand-600/70 blur-[0.5px] transition-all duration-300 group-hover:w-8"
+                {/* active pill */}
+                {isNavItemActive(n.to) && (
+                  <motion.span
+                    layoutId="nav-pill"
+                    className="absolute inset-0 rounded-full bg-brand-600/12 ring-1 ring-brand-600/25"
+                    transition={
+                      shouldReduceMotion
+                        ? { duration: 0.01 }
+                        : { type: "spring", stiffness: 420, damping: 32 }
+                    }
                     aria-hidden="true"
                   />
-                </>
-              )}
-            </NavLink>
+                )}
+
+                {/* hover underline glow */}
+                <span
+                  className="pointer-events-none absolute left-1/2 top-[calc(100%-4px)] h-[2px] w-0 -translate-x-1/2 rounded-full bg-brand-600/70 blur-[0.5px] transition-all duration-300 group-hover:w-8"
+                  aria-hidden="true"
+                />
+              </>
+            </Link>
           ))}
         </nav>
 
@@ -159,6 +233,22 @@ export default function Navbar() {
             <Flame className="h-4 w-4" />
             Let’s talk
           </Link>
+
+          {desktopActionLinks.map((n) => (
+            <NavLink
+              key={n.to}
+              to={n.to}
+              className={({ isActive }) =>
+                [
+                  linkBase,
+                  "hidden md:inline-flex px-3 py-2 rounded-full",
+                  isActive ? "text-text" : "text-muted hover:text-text",
+                ].join(" ")
+              }
+            >
+              {n.label}
+            </NavLink>
+          ))}
 
           {/* Mobile toggle */}
           <button
@@ -193,15 +283,14 @@ export default function Navbar() {
           <div className="relative z-50 border-t border-border/60 bg-background/90 backdrop-blur-xl">
             <div className="container py-4">
               <div className="grid gap-1">
-                {nav.map((n) => (
-                  <NavLink
+                {nav.filter((n) => n.to !== "/products").map((n) => (
+                  <Link
                     key={n.to}
                     to={n.to}
-                    end={n.to === "/"}
-                    className={({ isActive }) =>
+                    className={
                       [
                         "flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold transition",
-                        isActive
+                        isNavItemActive(n.to)
                           ? "bg-brand-600/12 text-text ring-1 ring-brand-600/25"
                           : "text-muted hover:bg-card/40 hover:text-text",
                       ].join(" ")
@@ -209,7 +298,7 @@ export default function Navbar() {
                   >
                     {n.label}
                     <span className="text-muted">→</span>
-                  </NavLink>
+                  </Link>
                 ))}
               </div>
 
@@ -224,7 +313,7 @@ export default function Navbar() {
                   to="/products"
                   className="flex-1 rounded-2xl border border-border/60 bg-card/40 px-4 py-3 text-center text-sm font-semibold text-text backdrop-blur transition hover:bg-card/60"
                 >
-                  Products
+                  Fire Store
                 </Link>
               </div>
 
