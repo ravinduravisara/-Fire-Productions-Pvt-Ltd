@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Phone, Sparkles, PlayCircle } from "lucide-react";
-import heroBg from "../../assets/hero-bg.png";
+import heroBg from "../../assets/Homepage.jpg";
 import Button from "../ui/Button";
 
 export default function Hero() {
@@ -33,6 +33,26 @@ export default function Hero() {
         show: shouldReduceMotion
           ? { opacity: 1 }
           : { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6 } },
+      },
+      wordWrap: {
+        hidden: {},
+        show: {
+          transition: shouldReduceMotion
+            ? { duration: 0.01 }
+            : { staggerChildren: 0.08, delayChildren: 0.1 },
+        },
+      },
+      word: {
+        hidden: shouldReduceMotion
+          ? { opacity: 0 }
+          : { opacity: 0, y: 24 },
+        show: shouldReduceMotion
+          ? { opacity: 1 }
+          : {
+              opacity: 1,
+              y: 0,
+              transition: { duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] },
+            },
       },
     }),
     [shouldReduceMotion]
@@ -92,14 +112,28 @@ export default function Hero() {
 
           {/* Title */}
           <motion.h1
-            variants={variants.item}
+            variants={variants.wordWrap}
             className="mt-6 text-4xl font-extrabold leading-[1.1] tracking-tight text-text sm:text-6xl"
           >
-            Igniting brands with{" "}
+            {["Igniting", "brands", "with"].map((w) => (
+              <motion.span
+                key={w}
+                variants={variants.word}
+                className="mr-[0.3em] inline-block"
+              >
+                {w}
+              </motion.span>
+            ))}{" "}
             <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-primary via-secondary to-highlight bg-clip-text text-transparent">
-                Fire Productions
-              </span>
+                {["Fire", "Productions"].map((w) => (
+                  <motion.span
+                    key={w}
+                    variants={variants.word}
+                    className="mr-[0.3em] inline-block bg-gradient-to-r from-primary via-secondary to-highlight bg-clip-text text-transparent"
+                  >
+                    {w}
+                  </motion.span>
+                ))}
               <span
                 className="pointer-events-none absolute -bottom-2 left-0 right-0 mx-auto h-[10px] w-[90%] rounded-full bg-gradient-to-r from-primary/30 via-secondary/30 to-highlight/20 blur-md"
                 aria-hidden="true"
@@ -165,14 +199,18 @@ export default function Hero() {
               { k: "Fast Turnaround", v: "Studio-ready delivery" },
               { k: "Cinematic Quality", v: "Modern production pipeline" },
               { k: "Brand Impact", v: "Story-led creative direction" },
-            ].map((x) => (
-              <div
+            ].map((x, i) => (
+              <motion.div
                 key={x.k}
+                initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.95 }}
+                animate={isLoaded ? { opacity: 1, y: 0, scale: 1 } : {}}
+                transition={{ duration: 0.5, delay: 0.6 + i * 0.12, ease: [0.25, 0.46, 0.45, 0.94] }}
+                whileHover={{ y: -4, transition: { duration: 0.2 } }}
                 className="rounded-2xl border border-border/60 bg-surface/60 p-4 text-left shadow-sm backdrop-blur"
               >
                 <div className="text-sm font-semibold text-text">{x.k}</div>
                 <div className="mt-1 text-sm text-muted">{x.v}</div>
-              </div>
+              </motion.div>
             ))}
           </motion.div>
         </motion.div>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
 import { getWorks } from '../../services/works.api'
 import SectionTitle from '../ui/SectionTitle'
 import FireCards from './FireCards'
@@ -121,8 +122,15 @@ export default function LatestWorks() {
           </div>
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-12">
-            {groups.map((g) => (
-              <div key={g.key} id={`group-${g.key}`}>
+            {groups.map((g, gi) => (
+              <motion.div
+                key={g.key}
+                id={`group-${g.key}`}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{ duration: 0.5, delay: gi * 0.1, ease: 'easeOut' }}
+              >
                 <h3 className="text-lg font-semibold text-text">{g.title}</h3>
                 {g.items.length ? (
                   <div className="mt-4">
@@ -131,7 +139,7 @@ export default function LatestWorks() {
                 ) : (
                   <p className="mt-4 text-sm text-muted">No recent projects yet.</p>
                 )}
-              </div>
+              </motion.div>
             ))}
           </div>
         )}

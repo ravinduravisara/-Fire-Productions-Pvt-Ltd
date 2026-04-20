@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 
 function LazyImage({ src, alt, aspect = 'video', mode = 'contain' }) {
   const [loaded, setLoaded] = useState(false)
@@ -233,11 +234,18 @@ export default function FireCards({ items = [], serviceKey, serviceTag }) {
         const isExpanded = cardId ? expandedIds.has(cardId) : false
 
         return (
-          <Wrapper
+          <motion.div
             key={cardId}
+            initial={{ opacity: 0, y: 30, scale: 0.97 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.45, delay: idx * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+            whileHover={{ y: -6, transition: { duration: 0.25 } }}
+          >
+          <Wrapper
             {...wrapperProps}
             id={w.id || w._id ? `work-card-${w.id || w._id}` : undefined}
-            className="relative group rounded-lg overflow-hidden border border-border/60 hover:shadow-lg transition-shadow bg-surface">
+            className="relative group rounded-lg overflow-hidden border border-border/60 hover:shadow-xl hover:shadow-brand-600/5 transition-shadow bg-surface block">
           
           {(() => {
             const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
@@ -370,8 +378,15 @@ export default function FireCards({ items = [], serviceKey, serviceTag }) {
               </div>
             ) : null}
             {/* Overlay description that does not change card height */}
+            <AnimatePresence>
             {isExpanded && w.description ? (
-              <div className="absolute inset-0 z-10 bg-background/90 backdrop-blur-sm p-4 overflow-auto">
+              <motion.div
+                className="absolute inset-0 z-10 bg-background/90 backdrop-blur-sm p-4 overflow-auto"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
                 <div className="flex items-start justify-between">
                   <h4 className="text-sm font-semibold text-text">{w.title}</h4>
                   <button
@@ -383,10 +398,12 @@ export default function FireCards({ items = [], serviceKey, serviceTag }) {
                   </button>
                 </div>
                 <p className="mt-2 text-sm text-muted whitespace-pre-line leading-relaxed">{w.description}</p>
-              </div>
+              </motion.div>
             ) : null}
+            </AnimatePresence>
           </div>
         </Wrapper>
+        </motion.div>
         )
       })}
     </div>
