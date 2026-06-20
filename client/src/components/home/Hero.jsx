@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Phone, Sparkles, PlayCircle } from "lucide-react";
+
 import heroBg from "../../assets/Homepage.jpg";
 import Button from "../ui/Button";
+import AdBanner from "../AdBanner";
 
 export default function Hero() {
   const navigate = useNavigate();
@@ -32,7 +34,12 @@ export default function Hero() {
           : { opacity: 0, y: 18, filter: "blur(6px)" },
         show: shouldReduceMotion
           ? { opacity: 1 }
-          : { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6 } },
+          : {
+              opacity: 1,
+              y: 0,
+              filter: "blur(0px)",
+              transition: { duration: 0.6 },
+            },
       },
       wordWrap: {
         hidden: {},
@@ -43,15 +50,16 @@ export default function Hero() {
         },
       },
       word: {
-        hidden: shouldReduceMotion
-          ? { opacity: 0 }
-          : { opacity: 0, y: 24 },
+        hidden: shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 24 },
         show: shouldReduceMotion
           ? { opacity: 1 }
           : {
               opacity: 1,
               y: 0,
-              transition: { duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] },
+              transition: {
+                duration: 0.55,
+                ease: [0.25, 0.46, 0.45, 0.94],
+              },
             },
       },
     }),
@@ -72,14 +80,17 @@ export default function Hero() {
         }}
         aria-hidden="true"
       />
+
       <div
         className="absolute inset-0 -z-10 bg-gradient-to-br from-background/85 via-background/70 to-background/40"
         aria-hidden="true"
       />
+
       <div
         className="absolute -top-32 left-1/2 -z-10 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-primary/30 via-secondary/25 to-highlight/15 blur-3xl"
         aria-hidden="true"
       />
+
       <div
         className="absolute -bottom-40 right-[-120px] -z-10 h-[520px] w-[520px] rounded-full bg-gradient-to-tr from-secondary/20 via-primary/15 to-transparent blur-3xl"
         aria-hidden="true"
@@ -94,20 +105,26 @@ export default function Hero() {
         >
           {/* Badge */}
           <motion.div variants={variants.item} className="flex justify-center">
-              <div className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border border-border/60 bg-surface/70 px-4 py-2 text-xs sm:text-sm text-text shadow-sm backdrop-blur">
-                <Sparkles className="h-4 w-4 text-secondary" />
-                {(() => {
-                  const items = ["Music", "Acoustic", "Entertainment", "Film Production"]
-                  return items.map((label, idx) => (
-                    <span key={label} className="inline-flex items-center">
-                      {idx > 0 && <span className="mx-1 text-border/60">•</span>}
-                      <span className="font-medium">{label}</span>
-                    </span>
-                  ))
-                })()}
-                <span className="mx-1 hidden text-border/60 sm:inline">•</span>
-                <span className="w-full text-center text-muted sm:w-auto sm:text-left">Premium creative studio</span>
-              </div>
+            <div className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border border-border/60 bg-surface/70 px-4 py-2 text-xs text-text shadow-sm backdrop-blur sm:text-sm">
+              <Sparkles className="h-4 w-4 text-secondary" />
+
+              {["Music", "Acoustic", "Entertainment", "Film Production"].map(
+                (label, idx) => (
+                  <span key={label} className="inline-flex items-center">
+                    {idx > 0 && (
+                      <span className="mx-1 text-border/60">•</span>
+                    )}
+                    <span className="font-medium">{label}</span>
+                  </span>
+                )
+              )}
+
+              <span className="mx-1 hidden text-border/60 sm:inline">•</span>
+
+              <span className="w-full text-center text-muted sm:w-auto sm:text-left">
+                Premium creative studio
+              </span>
+            </div>
           </motion.div>
 
           {/* Title */}
@@ -125,15 +142,16 @@ export default function Hero() {
               </motion.span>
             ))}{" "}
             <span className="relative inline-block">
-                {["Fire", "Productions"].map((w) => (
-                  <motion.span
-                    key={w}
-                    variants={variants.word}
-                    className="mr-[0.3em] inline-block bg-gradient-to-r from-primary via-secondary to-highlight bg-clip-text text-transparent"
-                  >
-                    {w}
-                  </motion.span>
-                ))}
+              {["Fire", "Productions"].map((w) => (
+                <motion.span
+                  key={w}
+                  variants={variants.word}
+                  className="mr-[0.3em] inline-block bg-gradient-to-r from-primary via-secondary to-highlight bg-clip-text text-transparent"
+                >
+                  {w}
+                </motion.span>
+              ))}
+
               <span
                 className="pointer-events-none absolute -bottom-2 left-0 right-0 mx-auto h-[10px] w-[90%] rounded-full bg-gradient-to-r from-primary/30 via-secondary/30 to-highlight/20 blur-md"
                 aria-hidden="true"
@@ -146,8 +164,9 @@ export default function Hero() {
             variants={variants.item}
             className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted sm:text-lg"
           >
-            Fire Production specializes in music, acoustic production, entertainment and high-quality film that strengthens
-            brand identity and audience impact.
+            Fire Production specializes in music, acoustic production,
+            entertainment and high-quality film that strengthens brand identity
+            and audience impact.
           </motion.p>
 
           {/* CTA */}
@@ -163,6 +182,7 @@ export default function Hero() {
                 View Products
                 <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
               </span>
+
               <span
                 className="absolute inset-0 -z-0 bg-gradient-to-r from-primary to-secondary opacity-0 transition-opacity duration-200 group-hover:opacity-15"
                 aria-hidden="true"
@@ -171,7 +191,7 @@ export default function Hero() {
 
             <Button
               onClick={() => go("/contact")}
-              className="w-full bg-surface hover:bg-border/40 text-text sm:w-auto"
+              className="w-full bg-surface text-text hover:bg-border/40 sm:w-auto"
             >
               <span className="inline-flex items-center gap-2">
                 <Phone className="h-4 w-4" />
@@ -202,9 +222,17 @@ export default function Hero() {
             ].map((x, i) => (
               <motion.div
                 key={x.k}
-                initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.95 }}
+                initial={
+                  shouldReduceMotion
+                    ? { opacity: 0 }
+                    : { opacity: 0, y: 20, scale: 0.95 }
+                }
                 animate={isLoaded ? { opacity: 1, y: 0, scale: 1 } : {}}
-                transition={{ duration: 0.5, delay: 0.6 + i * 0.12, ease: [0.25, 0.46, 0.45, 0.94] }}
+                transition={{
+                  duration: 0.5,
+                  delay: 0.6 + i * 0.12,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                }}
                 whileHover={{ y: -4, transition: { duration: 0.2 } }}
                 className="rounded-2xl border border-border/60 bg-surface/60 p-4 text-left shadow-sm backdrop-blur"
               >
@@ -212,6 +240,11 @@ export default function Hero() {
                 <div className="mt-1 text-sm text-muted">{x.v}</div>
               </motion.div>
             ))}
+          </motion.div>
+
+          {/* Google AdSense Banner */}
+          <motion.div variants={variants.item} className="mt-10">
+            <AdBanner />
           </motion.div>
         </motion.div>
       </div>
