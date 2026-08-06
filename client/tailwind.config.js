@@ -10,25 +10,37 @@ export default {
         // Semantic palette
         background: 'rgb(var(--color-background) / <alpha-value>)',
         surface: 'rgb(var(--color-surface) / <alpha-value>)',
+        'surface-alt': 'rgb(var(--color-surface-alt) / <alpha-value>)',
+        card: 'rgb(var(--color-card) / <alpha-value>)',
         text: 'rgb(var(--color-text) / <alpha-value>)',
+        foreground: 'rgb(var(--color-foreground) / <alpha-value>)',
         muted: 'rgb(var(--color-muted) / <alpha-value>)',
         border: 'rgb(var(--color-border) / <alpha-value>)',
 
-        // Brand accents
+        // Palette accents
         primary: {
-          DEFAULT: '#FF4D2D'
+          DEFAULT: '#E8491D'
         },
         secondary: {
-          DEFAULT: '#FF8A1F'
+          DEFAULT: '#B3220C'
         },
         highlight: {
-          DEFAULT: '#FFD166'
+          DEFAULT: '#C97E0A'
+        },
+        ember: {
+          DEFAULT: '#E8491D'
+        },
+        'ember-deep': {
+          DEFAULT: '#B3220C'
+        },
+        gold: {
+          DEFAULT: '#C97E0A'
         },
         brand: {
           50: '#FFF1EE',
           100: '#FFE1DC',
-          500: '#FF4D2D', // Fire Orange
-          600: '#E84528'
+          500: '#E8491D',
+          600: '#B3220C'
         }
       },
       keyframes: {

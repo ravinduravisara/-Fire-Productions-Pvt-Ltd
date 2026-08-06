@@ -3,13 +3,19 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
-  /* Fire Creative Dark Theme (RGB for alpha support) */
-  --color-background: 11 11 15;   /* #0B0B0F Charcoal Black */
-  --color-surface: 21 21 29;       /* #15151D Deep Graphite */
-  --color-text: 245 245 245;       /* #F5F5F5 Soft White */
-  --color-muted: 156 163 175;      /* #9CA3AF Ash Gray */
-  --color-border: 42 42 51;        /* #2A2A33 Smoked Gray */
+  color-scheme: light;
+  /* Warm off-white Fire palette (RGB for alpha support) */
+  --color-background: 250 247 242;   /* #FAF7F2 Warm off-white */
+  --color-surface: 242 232 220;      /* #F2E8DC Softer warm card surface */
+  --color-surface-alt: 243 238 230;  /* #F3EEE6 Secondary panels */
+  --color-text: 33 29 24;            /* #211D18 Near-black warm text */
+  --color-muted: 121 114 106;        /* #79726A Muted copy */
+  --color-border: 228 221 210;       /* #E4DDD2 Hairlines and borders */
+  --color-card: 242 232 220;          /* #F2E8DC Softer warm card background */
+  --color-foreground: 33 29 24;      /* #211D18 Same as primary text */
+  --color-ember: 232 73 29;          /* #E8491D Accent links and buttons */
+  --color-ember-deep: 179 34 12;     /* #B3220C Deeper ember accent */
+  --color-gold: 201 126 10;          /* #C97E0A Gold label accent */
 }
 
 html, body, #root {
