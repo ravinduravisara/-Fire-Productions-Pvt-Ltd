@@ -236,9 +236,10 @@ export default function FireCards({ items = [], serviceKey, serviceTag }) {
         return (
           <motion.div
             key={cardId}
-            initial={{ opacity: 0, x: -120, y: 20, scale: 0.96 }}
-            animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-            transition={{ duration: 0.7, delay: idx * 0.12, ease: 'easeOut' }}
+            initial={{ opacity: 0, y: 30, scale: 0.97 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.45, delay: idx * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
             whileHover={{ y: -6, transition: { duration: 0.25 } }}
           >
           <Wrapper

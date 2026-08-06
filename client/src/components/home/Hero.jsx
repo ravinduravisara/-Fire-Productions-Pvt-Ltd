@@ -82,12 +82,12 @@ export default function Hero() {
       />
 
       <div
-        className="absolute inset-0 -z-10 bg-gradient-to-br from-background/20 via-background/10 to-background/0"
+        className="absolute inset-0 -z-10 bg-gradient-to-br from-background/85 via-background/70 to-background/40"
         aria-hidden="true"
       />
 
       <div
-        className="absolute -top-32 left-1/2 -z-10 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-primary/20 via-secondary/10 to-highlight/10 blur-3xl"
+        className="absolute -top-32 left-1/2 -z-10 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-primary/30 via-secondary/25 to-highlight/15 blur-3xl"
         aria-hidden="true"
       />
 
@@ -164,36 +164,9 @@ export default function Hero() {
             variants={variants.item}
             className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted sm:text-lg"
           >
-            {[
-              'Fire',
-              'Production',
-              'specializes',
-              'in',
-              'music,',
-              'acoustic',
-              'production,',
-              'entertainment',
-              'and',
-              'high-quality',
-              'film',
-              'that',
-              'strengthens',
-              'brand',
-              'identity',
-              'and',
-              'audience',
-              'impact.',
-            ].map((word, i) => (
-                <motion.span
-                key={`${word}-${i}`}
-                initial={{ opacity: 1, x: -12 }}
-                animate={{ x: [ -12, 0, -12 ] }}
-                transition={{ duration: 5, delay: 0.4 + i * 0.12, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
-                className="inline-flex mr-1"
-              >
-                {word}
-              </motion.span>
-            ))}
+            Fire Production specializes in music, acoustic production,
+            entertainment and high-quality film that strengthens brand identity
+            and audience impact.
           </motion.p>
 
           {/* CTA */}
@@ -218,7 +191,7 @@ export default function Hero() {
 
             <Button
               onClick={() => go("/contact")}
-              className="w-full sm:w-auto"
+              className="w-full bg-surface text-text hover:bg-border/40 sm:w-auto"
             >
               <span className="inline-flex items-center gap-2">
                 <Phone className="h-4 w-4" />
