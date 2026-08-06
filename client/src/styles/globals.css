@@ -3,19 +3,21 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
-  /* Warm off-white Fire palette (RGB for alpha support) */
-  --color-background: 250 247 242;   /* #FAF7F2 Warm off-white */
-  --color-surface: 242 232 220;      /* #F2E8DC Softer warm card surface */
-  --color-surface-alt: 243 238 230;  /* #F3EEE6 Secondary panels */
-  --color-text: 33 29 24;            /* #211D18 Near-black warm text */
-  --color-muted: 121 114 106;        /* #79726A Muted copy */
-  --color-border: 228 221 210;       /* #E4DDD2 Hairlines and borders */
-  --color-card: 242 232 220;          /* #F2E8DC Softer warm card background */
-  --color-foreground: 33 29 24;      /* #211D18 Same as primary text */
-  --color-ember: 232 73 29;          /* #E8491D Accent links and buttons */
-  --color-ember-deep: 179 34 12;     /* #B3220C Deeper ember accent */
-  --color-gold: 201 126 10;          /* #C97E0A Gold label accent */
+  color-scheme: dark;
+  /* Dark orange / blue palette */
+  --color-background: 0 30 43;       /* #001E2B Dark center background */
+  --color-background-alt: 1 2 4;      /* #010204 Near-black corner background */
+  --color-surface: 6 26 47;          /* #061A2F Dark surface */
+  --color-surface-alt: 9 36 61;      /* #09243D Secondary panel */
+  --color-text: 238 242 247;         /* #EEF2F7 Light text */
+  --color-muted: 163 182 199;        /* #A3B6C7 Soft muted text */
+  --color-border: 14 42 65;          /* #0E2A41 Dark border */
+  --color-card: 12 34 53;            /* #0C2235 Card background */
+  --color-foreground: 238 242 247;   /* #EEF2F7 Primary text */
+  --color-primary: 255 141 2;         /* #FF8D02 Orange glow */
+  --color-secondary: 178 46 2;       /* #B22E02 Orange mid-tone */
+  --color-highlight: 2 177 252;      /* #02B1FC Blue glow */
+  --color-highlight-deep: 1 103 163;  /* #0167A3 Blue mid-tone */
 }
 
 html, body, #root {

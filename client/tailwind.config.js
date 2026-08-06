@@ -19,28 +19,32 @@ export default {
 
         // Palette accents
         primary: {
-          DEFAULT: '#E8491D'
+          DEFAULT: '#FF8D02'
         },
         secondary: {
-          DEFAULT: '#B3220C'
+          DEFAULT: '#B22E02'
         },
         highlight: {
-          DEFAULT: '#C97E0A'
+          DEFAULT: '#02B1FC'
+        },
+        'highlight-deep': {
+          DEFAULT: '#0167A3'
         },
         ember: {
-          DEFAULT: '#E8491D'
+          DEFAULT: '#FF8D02'
         },
         'ember-deep': {
-          DEFAULT: '#B3220C'
+          DEFAULT: '#B22E02'
         },
-        gold: {
-          DEFAULT: '#C97E0A'
+        blue: {
+          500: '#02B1FC',
+          600: '#0167A3'
         },
         brand: {
-          50: '#FFF1EE',
-          100: '#FFE1DC',
-          500: '#E8491D',
-          600: '#B3220C'
+          50: '#0E2232',
+          100: '#132C40',
+          500: '#FF8D02',
+          600: '#B22E02'
         }
       },
       keyframes: {
