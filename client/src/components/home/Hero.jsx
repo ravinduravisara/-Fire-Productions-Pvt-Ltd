@@ -50,11 +50,14 @@ export default function Hero() {
         },
       },
       word: {
-        hidden: shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 24 },
+        hidden: shouldReduceMotion
+          ? { opacity: 0 }
+          : { opacity: 0, x: -32, y: 10 },
         show: shouldReduceMotion
           ? { opacity: 1 }
           : {
               opacity: 1,
+              x: 0,
               y: 0,
               transition: {
                 duration: 0.55,
@@ -129,23 +132,38 @@ export default function Hero() {
 
           {/* Title */}
           <motion.h1
-            variants={variants.wordWrap}
             className="mt-6 text-4xl font-extrabold leading-[1.1] tracking-tight text-text sm:text-6xl"
           >
-            {["Igniting", "brands", "with"].map((w) => (
+            {["Igniting", "brands", "with"].map((w, idx) => (
               <motion.span
                 key={w}
-                variants={variants.word}
+                initial={{ x: -32 }}
+                animate={isLoaded ? { x: [0, -8, 0] } : {}}
+                transition={{
+                  duration: 3.4,
+                  ease: 'easeInOut',
+                  delay: 0.2 + idx * 0.08,
+                  repeat: Infinity,
+                  repeatType: 'mirror',
+                }}
                 className="mr-[0.3em] inline-block"
               >
                 {w}
               </motion.span>
             ))}{" "}
             <span className="relative inline-block">
-              {["Fire", "Productions"].map((w) => (
+              {["Fire", "Productions"].map((w, idx) => (
                 <motion.span
                   key={w}
-                  variants={variants.word}
+                  initial={{ x: -32 }}
+                  animate={isLoaded ? { x: [0, -8, 0] } : {}}
+                  transition={{
+                    duration: 3.4,
+                    ease: 'easeInOut',
+                    delay: 0.2 + (idx + 3) * 0.08,
+                    repeat: Infinity,
+                    repeatType: 'mirror',
+                  }}
                   className="mr-[0.3em] inline-block bg-gradient-to-r from-primary via-secondary to-highlight bg-clip-text text-transparent"
                 >
                   {w}
