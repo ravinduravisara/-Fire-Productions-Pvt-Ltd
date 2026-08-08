@@ -6,6 +6,7 @@ import { ArrowRight, Phone, Sparkles, PlayCircle } from "lucide-react";
 import heroBg from "../../assets/Homepage.jpg";
 import Button from "../ui/Button";
 import AdBanner from "../AdBanner";
+import FloatingLines from "../ui/FloatingLines";
 
 export default function Hero() {
   const navigate = useNavigate();
@@ -99,12 +100,26 @@ export default function Hero() {
         aria-hidden="true"
       />
 
+      <div className="absolute inset-0 z-[-15]" aria-hidden="true">
+        <FloatingLines
+          linesGradient={['#FF1500', '#FF8000', '#FFFFFF']}
+          enabledWaves={['top', 'middle', 'bottom']}
+          lineCount={[6, 10, 12]}
+          lineDistance={[6, 4, 3]}
+          bendRadius={4.2}
+          bendStrength={-0.35}
+          interactive={true}
+          parallax={true}
+          mixBlendMode="screen"
+        />
+      </div>
+
       <div className="container">
         <motion.div
           variants={variants.wrap}
           initial="hidden"
           animate={isLoaded ? "show" : "hidden"}
-          className="mx-auto max-w-4xl text-center"
+          className="relative z-10 mx-auto max-w-4xl text-center"
         >
           {/* Badge */}
           <motion.div variants={variants.item} className="flex justify-center">

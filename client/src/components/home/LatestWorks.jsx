@@ -1,16 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
 import { getWorks } from '../../services/works.api'
 import SectionTitle from '../ui/SectionTitle'
-import FireCards from './FireCards'
-
-// Service groups to display: match by `category` or `tags`
-const SERVICE_GROUPS = [
-  { key: 'music', title: 'Fire Music', tag: 'Music' },
-  { key: 'acoustic', title: 'Fire Acoustic', tag: 'Acoustic' },
-  { key: 'entertainment', title: 'Fire Entertainment', tag: 'Entertainment' },
-  { key: 'films', title: 'Fire Films', tag: 'Films' },
-]
+import DriftWall from '../ui/DriftWall'
 
 export default function LatestWorks() {
   const [items, setItems] = useState([])
@@ -38,75 +29,40 @@ export default function LatestWorks() {
     })()
   }, [])
 
-  // Build per-service latest 3 items, matching by category or tags
-  const groups = useMemo(() => {
+  const musicItems = useMemo(() => {
     if (!Array.isArray(items) || !items.length) return []
-    const results = []
-    for (const grp of SERVICE_GROUPS) {
-      const picked = []
-      for (const w of items) {
-        const category = String(w.category || '')
-        const tags = Array.isArray(w.tags) ? w.tags : []
-        const match = category === grp.tag || tags.includes(grp.tag)
-        if (match) {
-          picked.push(w)
-          if (picked.length >= 3) break
-        }
-      }
-      results.push({ ...grp, items: picked })
+
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+    const filesBase = apiBase.replace(/\/api$/, '')
+
+    const isMusicWork = (work) => {
+      const category = String(work.category || '').toLowerCase()
+      const tags = Array.isArray(work.tags) ? work.tags.map((tag) => String(tag).toLowerCase()) : []
+      return category === 'music' || tags.includes('music')
     }
-    return results
+
+    const flatten = items
+      .filter(isMusicWork)
+      .flatMap((work, index) => {
+      const raws = Array.isArray(work.imageUrls) && work.imageUrls.length
+        ? work.imageUrls
+        : [work.imageUrl || work.image || work.url].filter(Boolean)
+
+      return raws.map((raw, imageIndex) => ({
+        id: work.id || work._id || `${index}-${imageIndex}`,
+        image: String(raw).startsWith('http') ? raw : `${filesBase}${raw}`,
+        title: work.title || 'Latest Work',
+        href: work.link || (work.id || work._id ? `/works/${work.id || work._id}` : undefined),
+      }))
+      })
+
+    return flatten.slice(0, 15)
   }, [items])
-
-  // After items render, auto-scroll to the previously clicked card (if any)
-  useEffect(() => {
-    if (didAutoScroll || loading) return
-    let workId, src, tag
-    try {
-      workId = sessionStorage.getItem('returnToWorkId')
-      src = sessionStorage.getItem('returnToSource')
-      tag = sessionStorage.getItem('returnToServiceTag')
-    } catch {}
-    // Only auto-scroll for Home origin and Fire Entertainment
-    if (!workId || src !== 'home' || tag !== 'Entertainment') return
-
-    let attempts = 0
-    const maxAttempts = 30 // ~500ms at 60fps
-    const scrollToCard = () => {
-      const el = document.getElementById(`work-card-${workId}`)
-      if (el) {
-        try { sessionStorage.removeItem('returnToWorkId') } catch {}
-        try { sessionStorage.removeItem('returnToSource') } catch {}
-        try { sessionStorage.removeItem('returnToTime') } catch {}
-        try { sessionStorage.removeItem('returnToServiceTag') } catch {}
-        setDidAutoScroll(true)
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        return
-      }
-      attempts += 1
-      if (attempts < maxAttempts) {
-        requestAnimationFrame(scrollToCard)
-      } else {
-        // Fallback: scroll to Fire Entertainment section if card not in latest 3
-        const groupEl = document.getElementById('group-entertainment')
-        if (groupEl) {
-          const rect = groupEl.getBoundingClientRect()
-          const top = rect.top + window.scrollY - 80
-          window.scrollTo({ top, behavior: 'smooth' })
-        }
-        try { sessionStorage.removeItem('returnToWorkId') } catch {}
-        try { sessionStorage.removeItem('returnToSource') } catch {}
-        try { sessionStorage.removeItem('returnToServiceTag') } catch {}
-      }
-    }
-
-    requestAnimationFrame(scrollToCard)
-  }, [loading, groups, didAutoScroll])
 
   return (
     <section className="py-16">
       <div className="container">
-        <SectionTitle title="Latest Works" subtitle="Latest 3 from each service" />
+        <SectionTitle title="Latest Music Works" subtitle="Recent music projects only" />
         {loading ? (
           <div className="mt-8 grid grid-cols-1 gap-10">
             {[...Array(4)].map((_, i) => (
@@ -120,28 +76,37 @@ export default function LatestWorks() {
               </div>
             ))}
           </div>
-        ) : (
-          <div className="mt-8 grid grid-cols-1 gap-12">
-            {groups.map((g, gi) => (
-              <motion.div
-                key={g.key}
-                id={`group-${g.key}`}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.15 }}
-                transition={{ duration: 0.5, delay: gi * 0.1, ease: 'easeOut' }}
-              >
-                <h3 className="text-lg font-semibold text-text">{g.title}</h3>
-                {g.items.length ? (
-                  <div className="mt-4">
-                    <FireCards items={g.items} />
-                  </div>
-                ) : (
-                  <p className="mt-4 text-sm text-muted">No recent projects yet.</p>
-                )}
-              </motion.div>
-            ))}
+        ) : musicItems.length ? (
+          <div className="mt-8">
+            <div className="h-[min(82vh,46rem)] rounded-[2rem] border border-border/60 bg-surface/30 p-2 shadow-2xl shadow-black/10 sm:p-4">
+              <DriftWall
+                items={musicItems}
+                columns={5}
+                tileWidth={200}
+                tileHeight={132}
+                gap={18}
+                tilt={14}
+                turn={-12}
+                perspective={1200}
+                depth={120}
+                speed={30}
+                direction="up"
+                variance={0.38}
+                parallax={0.45}
+                pauseOnHover={false}
+                lift={54}
+                fade={0.55}
+                dim={0.58}
+                grayscale={false}
+                overlayColor="#060010"
+              />
+            </div>
+            <p className="mt-4 text-sm text-muted">
+              
+            </p>
           </div>
+        ) : (
+          <p className="mt-8 text-sm text-muted">No recent music projects yet.</p>
         )}
       </div>
     </section>
